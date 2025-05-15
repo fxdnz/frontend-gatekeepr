@@ -1,29 +1,28 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
 import { logout } from "../actions/auth";
-import { Link } from "react-router-dom";
 
 const NavBar = ({ logout, isAuthenticated }) => {
   const guestLinks = () => (
     <Fragment>
       <li className="nav-item">
-        <Link className="nav-link" href="/login">
+        <a className="nav-link" href="/login">
           Login
-        </Link>
+        </a>
       </li>
       <li className="nav-item">
-        <Link className="nav-link" href="/signup">
+        <a className="nav-link" href="/signup">
           Sign Up
-        </Link>
+        </a>
       </li>
     </Fragment>
   );
 
   const authLinks = () => (
     <li className="nav-item">
-      <Link className="nav-link" href="#!" onClick={logout}>
+      <a className="nav-link" href="#!" onClick={logout}>
         Logout
-      </Link>
+      </a>
     </li>
   );
 
