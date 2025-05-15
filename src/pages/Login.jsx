@@ -57,7 +57,7 @@ const Login = ({ login, isAuthenticated }) => {
         </button>
       </form>
       <p className="mt-3">
-        Don't have an account? <Link to="/register">Register</Link>
+        Don't have an account? <Link to="/signup">Register</Link>
       </p>
       <p className="mt-3">
         Forgot Password? <Link to="/reset-password">Reset Password</Link>
