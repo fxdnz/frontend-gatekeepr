@@ -3,18 +3,16 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // Remove or comment out the base URL for development
-  // base: '/static/dist/',  // ❌ Remove this line for dev server
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
-      "/auth": "http://localhost:8000",
+      "/api": "http://localhost:8000", // Keep if you still need API proxying
+      "/auth": "http://localhost:8000", // Same here for auth if needed
     },
   },
   build: {
-    // Keep base only for production builds
-    base: "/static/dist/", // ✅ Only used when building for Django
-    outDir: "../gatekeepr/static/dist",
+    // No need for base or outDir specific to Django
+    base: "", // Empty base for the dev build and production build
+    outDir: "dist", // Default output folder for Vite
     emptyOutDir: true,
   },
 });
