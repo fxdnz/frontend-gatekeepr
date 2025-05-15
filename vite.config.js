@@ -5,8 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://localhost:8000", // Keep if you still need API proxying
-      "/auth": "http://localhost:8000", // Same here for auth if needed
+      "/api": "https://gatekeepr-backend.onrender.com/", // Keep if you still need API proxying
+      "/auth": "https://gatekeepr-backend.onrender.com/", // Same here for auth if needed
     },
   },
   build: {
