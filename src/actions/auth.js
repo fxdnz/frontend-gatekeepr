@@ -31,7 +31,7 @@ export const checkAuthenticated = () => async (dispatch) => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/jwt/verify/`, // Fixed string interpolation
+        `https://gatekeepr-backend.onrender.com/auth/jwt/verify/`, // Fixed string interpolation
         body,
         config
       );
@@ -61,7 +61,7 @@ export const load_user = () => async (dispatch) => {
 
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/auth/users/me/`, // Fixed string interpolation
+        `https://gatekeepr-backend.onrender.com/auth/users/me/`, // Fixed string interpolation
         config
       );
 
@@ -88,7 +88,7 @@ export const login = (email, password) => async (dispatch) => {
 
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/jwt/create/`, // Fixed string interpolation
+      `https://gatekeepr-backend.onrender.com/auth/jwt/create/`, // Fixed string interpolation
       body,
       config
     );
@@ -119,7 +119,7 @@ export const signup =
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/users/`, // Fixed string interpolation
+        `https://gatekeepr-backend.onrender.com/auth/users/`, // Fixed string interpolation
         body,
         config
       );
@@ -147,7 +147,7 @@ export const verify = (uid, token) => async (dispatch) => {
 
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/users/activation/`, // Fixed string interpolation
+      `https://gatekeepr-backend.onrender.com/auth/users/activation/`, // Fixed string interpolation
       body,
       config
     );
@@ -174,7 +174,7 @@ export const reset_password = (email) => async (dispatch) => {
 
   try {
     await axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/users/reset_password/`, // Fixed string interpolation
+      `https://gatekeepr-backend.onrender.com/auth/users/reset_password/`, // Fixed string interpolation
       body,
       config
     );
@@ -201,7 +201,7 @@ export const reset_password_confirm =
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/users/reset_password_confirm/`, // Fixed string interpolation
+        `https://gatekeepr-backend.onrender.com/auth/users/reset_password_confirm/`, // Fixed string interpolation
         body,
         config
       );

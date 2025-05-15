@@ -26,7 +26,7 @@ const Home = () => {
 
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/access-logs/`,
+          `https://gatekeepr-backend.onrender.com/api/v1/access-logs/`,
           {
             headers: {
               Authorization: `JWT ${access}`,
@@ -46,7 +46,7 @@ const Home = () => {
           } else if (err.response.status === 401) {
             try {
               const refreshResponse = await axios.post(
-                `${import.meta.env.VITE_API_URL}/auth/jwt/refresh/`,
+                `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
                 { refresh: localStorage.getItem("refresh") }
               );
 
@@ -57,7 +57,7 @@ const Home = () => {
               });
 
               const retryResponse = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/v1/access-logs/`,
+                `https://gatekeepr-backend.onrender.com/api/v1/access-logs/`,
                 {
                   headers: {
                     Authorization: `JWT ${refreshResponse.data.access}`,
