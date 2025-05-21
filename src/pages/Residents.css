@@ -214,6 +214,95 @@
   margin-bottom: 15px;
 }
 
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.edit-button,
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.edit-button {
+  color: #2196f3;
+}
+
+.delete-button {
+  color: #e53935;
+}
+
+.edit-button:hover {
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.delete-button:hover {
+  background-color: rgba(229, 57, 53, 0.1);
+}
+
+/* Delete confirmation modal */
+.delete-modal {
+  max-width: 400px;
+}
+
+.warning-icon {
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.delete-message {
+  margin-bottom: 20px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.delete-confirm-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  transition: background-color 0.2s;
+}
+
+.delete-confirm-button:hover {
+  background-color: #c62828;
+}
+
+.delete-cancel-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  transition: background-color 0.2s;
+}
+
+.delete-cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
 /* Dark mode styles */
 body.dark-mode .residents-container {
   background-color: #1e1e1e;
@@ -260,6 +349,27 @@ body.dark-mode .clear-button {
 body.dark-mode .loading,
 body.dark-mode .no-data {
   color: #aaa;
+}
+
+body.dark-mode .delete-message {
+  color: #e0e0e0;
+}
+
+body.dark-mode .delete-cancel-button {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .delete-cancel-button:hover {
+  background-color: #333;
+}
+
+body.dark-mode .edit-button:hover {
+  background-color: rgba(33, 150, 243, 0.2);
+}
+
+body.dark-mode .delete-button:hover {
+  background-color: rgba(229, 57, 53, 0.2);
 }
 
 /* Modal white glow effect in dark mode */

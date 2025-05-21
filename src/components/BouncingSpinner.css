@@ -1,0 +1,51 @@
+.bouncing-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.bouncing-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.bouncing-spinner > div {
+  width: 10px;
+  height: 10px;
+  background-color: black; /* Light mode default */
+  border-radius: 100%;
+  display: inline-block;
+  margin: 0 3px;
+  animation: bouncing-sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.bouncing-spinner.white > div {
+  background-color: white !important;
+}
+
+body.dark-mode .bouncing-spinner > div {
+  background-color: #00c07f;
+}
+
+.bouncing-spinner .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.bouncing-spinner .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes bouncing-sk-bouncedelay {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

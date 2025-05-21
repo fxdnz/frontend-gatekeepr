@@ -7,6 +7,7 @@ import { load_user } from "../actions/auth";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Home.css";
+import BouncingSpinner from "../components/BouncingSpinner";
 
 const Home = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -25,6 +26,7 @@ const Home = () => {
   });
   const [visitorError, setVisitorError] = useState("");
   const [visitorSuccess, setVisitorSuccess] = useState("");
+  const [visitorLoading, setVisitorLoading] = useState(false);
 
   useEffect(() => {
     if (access && !user) {
@@ -50,7 +52,18 @@ const Home = () => {
             },
           }
         );
-        setLogs(response.data);
+
+        // Process logs similar to Logs.jsx
+        const processedLogs = response.data
+          .map((log) => ({
+            ...log,
+            plate_number: log.plate_number || "-",
+            parking_slot: log.parking?.slot_number || "-",
+            type: log.type || log.user_type || "RESIDENT",
+          }))
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // most recent first
+
+        setLogs(processedLogs);
       } catch (err) {
         setError("Failed to fetch logs.");
       } finally {
@@ -59,6 +72,15 @@ const Home = () => {
     };
 
     fetchAccessLogs();
+
+    // Set up polling for real-time updates (every 10 seconds)
+    const pollingInterval = setInterval(() => {
+      if (isAuthenticated && access) {
+        fetchAccessLogs();
+      }
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
   const handleVisitorInputChange = (e) => {
@@ -70,6 +92,7 @@ const Home = () => {
     e.preventDefault();
     setVisitorError("");
     setVisitorSuccess("");
+    setVisitorLoading(true);
 
     try {
       await axios.post(
@@ -98,7 +121,23 @@ const Home = () => {
       }, 2000);
     } catch (error) {
       setVisitorError("Failed to log visitor.");
+    } finally {
+      setVisitorLoading(false);
     }
+  };
+
+  // Format timestamp for display
+  const formatTimeStamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return {
+      date: date.toISOString().split("T")[0],
+      time: date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }),
+    };
   };
 
   if (!isAuthenticated) {
@@ -143,7 +182,7 @@ const Home = () => {
             </div>
 
             {loading ? (
-              <div className="loading">Loading access logs...</div>
+              <BouncingSpinner />
             ) : error ? (
               <div className="error">{error}</div>
             ) : logs.length === 0 ? (
@@ -161,44 +200,32 @@ const Home = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...logs]
-                    .sort(
-                      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-                    )
-                    .map((log) => {
-                      const date = new Date(log.timestamp);
-                      const formattedDate = date.toISOString().split("T")[0];
-                      const formattedTime = date.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                        hour12: false,
-                      });
-
-                      return (
-                        <tr key={log.id}>
-                          <td>
-                            <div className="time-main">{formattedDate}</div>
-                            <div className="time-sub">{formattedTime}</div>
-                          </td>
-                          <td>{log.user_type || "RESIDENT"}</td>
-                          <td>{log.name || "N/A"}</td>
-                          <td>{log.plate_number || "-"}</td>
-                          <td>
-                            <span
-                              className={`activity-tag ${
-                                log.action?.toLowerCase() === "entry"
-                                  ? "entry"
-                                  : "exit"
-                              }`}
-                            >
-                              {log.action}
-                            </span>
-                          </td>
-                          <td>{log.parking?.slot_number || "-"}</td>
-                        </tr>
-                      );
-                    })}
+                  {logs.map((log) => {
+                    const { date, time } = formatTimeStamp(log.timestamp);
+                    return (
+                      <tr key={log.id}>
+                        <td>
+                          <div className="time-main">{date}</div>
+                          <div className="time-sub">{time}</div>
+                        </td>
+                        <td>{log.type}</td>
+                        <td>{log.name || "N/A"}</td>
+                        <td>{log.plate_number}</td>
+                        <td>
+                          <span
+                            className={`activity-tag ${
+                              log.action?.toLowerCase() === "entry"
+                                ? "entry"
+                                : "exit"
+                            }`}
+                          >
+                            {log.action}
+                          </span>
+                        </td>
+                        <td>{log.parking_slot}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -253,8 +280,20 @@ const Home = () => {
                 </div>
               ))}
               <div className="form-actions">
-                <button type="submit" className="submit-button">
-                  Submit
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={visitorLoading}
+                >
+                  {visitorLoading ? (
+                    <div className="spinner white">
+                      <div className="bounce1"></div>
+                      <div className="bounce2"></div>
+                      <div className="bounce3"></div>
+                    </div>
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -268,6 +307,7 @@ const Home = () => {
                       purpose: "",
                     })
                   }
+                  disabled={visitorLoading}
                 >
                   Clear
                 </button>

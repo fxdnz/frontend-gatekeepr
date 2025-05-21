@@ -7,6 +7,7 @@ import { load_user } from "../actions/auth";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Logs.css";
+import LoadingSpinner from "../components/BouncingSpinner";
 
 const Logs = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -102,6 +103,15 @@ const Logs = () => {
     };
 
     fetchData();
+
+    // Set up polling for real-time updates (every 10 seconds)
+    const pollingInterval = setInterval(() => {
+      if (isAuthenticated && access) {
+        fetchData();
+      }
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
   useEffect(() => {
@@ -175,7 +185,7 @@ const Logs = () => {
             </div>
 
             {loading ? (
-              <div className="loading">Loading logs...</div>
+              <LoadingSpinner />
             ) : error ? (
               <div className="error">{error}</div>
             ) : filteredLogs.length === 0 ? (

@@ -7,6 +7,7 @@ import { load_user } from "../actions/auth";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Residents.css";
+import BouncingSpinner from "../components/BouncingSpinner";
 
 const Residents = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -24,6 +25,13 @@ const Residents = () => {
   });
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+
+  // New states for edit mode and delete confirmation
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentResidentId, setCurrentResidentId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (access && !user) {
@@ -31,79 +39,88 @@ const Residents = () => {
     }
   }, [access, user, dispatch]);
 
-  useEffect(() => {
-    const fetchResidents = async () => {
-      if (!isAuthenticated) {
-        setError("Please login to view residents");
-        setLoading(false);
-        return;
-      }
+  const fetchResidents = async () => {
+    if (!isAuthenticated) {
+      setError("Please login to view residents");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const response = await axios.get(
-          `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-          {
-            headers: {
-              Authorization: `JWT ${access}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setResidents(response.data);
-      } catch (err) {
-        console.error("Error fetching residents:", err);
-
-        if (err.response) {
-          if (err.response.status === 500) {
-            setError(
-              "Server error while fetching residents. Please try again later."
-            );
-          } else if (err.response.status === 401) {
-            try {
-              const refreshResponse = await axios.post(
-                `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
-                {
-                  refresh: localStorage.getItem("refresh"),
-                }
-              );
-
-              localStorage.setItem("access", refreshResponse.data.access);
-              dispatch({
-                type: "LOGIN_SUCCESS",
-                payload: refreshResponse.data,
-              });
-
-              const retryResponse = await axios.get(
-                `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-                {
-                  headers: {
-                    Authorization: `JWT ${refreshResponse.data.access}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              setResidents(retryResponse.data);
-            } catch (refreshError) {
-              console.error("Token refresh failed:", refreshError);
-              dispatch({ type: "LOGIN_FAIL" });
-              setError("Session expired. Please login again.");
-            }
-          } else {
-            setError(
-              err.response.data?.detail || "An unexpected error occurred."
-            );
-          }
-        } else if (err.request) {
-          setError("No response from server. Please check your network.");
-        } else {
-          setError("Error: " + err.message);
+    try {
+      const response = await axios.get(
+        `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
+        {
+          headers: {
+            Authorization: `JWT ${access}`,
+            "Content-Type": "application/json",
+          },
         }
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
+      setResidents(response.data);
+    } catch (err) {
+      console.error("Error fetching residents:", err);
 
+      if (err.response) {
+        if (err.response.status === 500) {
+          setError(
+            "Server error while fetching residents. Please try again later."
+          );
+        } else if (err.response.status === 401) {
+          try {
+            const refreshResponse = await axios.post(
+              `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
+              {
+                refresh: localStorage.getItem("refresh"),
+              }
+            );
+
+            localStorage.setItem("access", refreshResponse.data.access);
+            dispatch({
+              type: "LOGIN_SUCCESS",
+              payload: refreshResponse.data,
+            });
+
+            const retryResponse = await axios.get(
+              `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
+              {
+                headers: {
+                  Authorization: `JWT ${refreshResponse.data.access}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            setResidents(retryResponse.data);
+          } catch (refreshError) {
+            console.error("Token refresh failed:", refreshError);
+            dispatch({ type: "LOGIN_FAIL" });
+            setError("Session expired. Please login again.");
+          }
+        } else {
+          setError(
+            err.response.data?.detail || "An unexpected error occurred."
+          );
+        }
+      } else if (err.request) {
+        setError("No response from server. Please check your network.");
+      } else {
+        setError("Error: " + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchResidents();
+
+    // Set up polling for real-time updates (every 10 seconds)
+    const pollingInterval = setInterval(() => {
+      if (isAuthenticated && access) {
+        fetchResidents();
+      }
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
   const handleInputChange = (e) => {
@@ -114,15 +131,32 @@ const Residents = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormError("");
-    setFormSuccess("");
+  // Function to open edit modal
+  const handleEditResident = (resident) => {
+    setIsEditMode(true);
+    setCurrentResidentId(resident.id);
+    setFormData({
+      name: resident.name,
+      rfid_uid: resident.rfid_uid,
+      plate_number: resident.plate_number,
+      unit_number: resident.unit_number,
+      phone: resident.phone,
+    });
+    setShowModal(true);
+  };
 
+  // Function to open delete confirmation modal
+  const handleDeleteClick = (resident) => {
+    setCurrentResidentId(resident.id);
+    setShowDeleteModal(true);
+  };
+
+  // Function to delete resident
+  const handleDeleteResident = async () => {
+    setDeleteLoading(true);
     try {
-      const response = await axios.post(
-        `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-        formData,
+      await axios.delete(
+        `https://gatekeepr-backend.onrender.com/api/v1/residents/${currentResidentId}/`,
         {
           headers: {
             Authorization: `JWT ${access}`,
@@ -131,36 +165,96 @@ const Residents = () => {
         }
       );
 
-      // Add the new resident to the list
-      setResidents([...residents, response.data]);
-      setFormSuccess("Resident registered successfully!");
+      // Remove the deleted resident from the state
+      setResidents(
+        residents.filter((resident) => resident.id !== currentResidentId)
+      );
+      setShowDeleteModal(false);
+      setCurrentResidentId(null);
+    } catch (err) {
+      console.error("Error deleting resident:", err);
+      alert("Failed to delete resident. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Updated submit handler to handle both create and update
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+    setFormLoading(true);
+
+    try {
+      let response;
+
+      if (isEditMode) {
+        // Update existing resident
+        response = await axios.put(
+          `https://gatekeepr-backend.onrender.com/api/v1/residents/${currentResidentId}/`,
+          formData,
+          {
+            headers: {
+              Authorization: `JWT ${access}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Update the resident in the list
+        setResidents(
+          residents.map((resident) =>
+            resident.id === currentResidentId ? response.data : resident
+          )
+        );
+        setFormSuccess("Resident updated successfully!");
+      } else {
+        // Create new resident
+        response = await axios.post(
+          `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
+          formData,
+          {
+            headers: {
+              Authorization: `JWT ${access}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Add the new resident to the list
+        setResidents([...residents, response.data]);
+        setFormSuccess("Resident registered successfully!");
+      }
 
       // Clear the form
-      setFormData({
-        name: "",
-        rfid_uid: "",
-        plate_number: "",
-        unit_number: "",
-        phone: "",
-      });
-
-      // Close the modal after a delay
       setTimeout(() => {
         setShowModal(false);
         setFormSuccess("");
+        setIsEditMode(false);
+        setCurrentResidentId(null);
+        setFormData({
+          name: "",
+          rfid_uid: "",
+          plate_number: "",
+          unit_number: "",
+          phone: "",
+        });
       }, 2000);
     } catch (err) {
-      console.error("Error registering resident:", err);
+      console.error("Error saving resident:", err);
       if (err.response) {
         setFormError(
           err.response.data?.detail ||
-            "Failed to register resident. Please try again."
+            "Failed to save resident. Please try again."
         );
       } else if (err.request) {
         setFormError("No response from server. Please check your network.");
       } else {
         setFormError("Error: " + err.message);
       }
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -174,6 +268,20 @@ const Residents = () => {
     });
     setFormError("");
     setFormSuccess("");
+  };
+
+  // Function to open the modal for creating a new resident
+  const handleAddResident = () => {
+    setIsEditMode(false);
+    setCurrentResidentId(null);
+    setFormData({
+      name: "",
+      rfid_uid: "",
+      plate_number: "",
+      unit_number: "",
+      phone: "",
+    });
+    setShowModal(true);
   };
 
   if (!isAuthenticated) {
@@ -198,19 +306,15 @@ const Residents = () => {
             <div className="residents-header">
               <div className="residents-title">
                 <i className="fas fa-users green-icon"></i>
-
                 <h2>Residents</h2>
               </div>
-              <button
-                className="register-button"
-                onClick={() => setShowModal(true)}
-              >
+              <button className="register-button" onClick={handleAddResident}>
                 <i className="fas fa-user-plus"></i> Register Resident
               </button>
             </div>
 
             {loading ? (
-              <div className="loading">Loading residents...</div>
+              <BouncingSpinner />
             ) : error ? (
               <div className="error">{error}</div>
             ) : residents.length === 0 ? (
@@ -224,6 +328,7 @@ const Residents = () => {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Unit Number</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,6 +339,22 @@ const Residents = () => {
                       <td>{resident.name}</td>
                       <td>{resident.phone}</td>
                       <td>{resident.unit_number}</td>
+                      <td className="action-buttons">
+                        <button
+                          className="edit-button"
+                          onClick={() => handleEditResident(resident)}
+                          title="Edit resident"
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDeleteClick(resident)}
+                          title="Delete resident"
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -243,14 +364,16 @@ const Residents = () => {
         </div>
       </div>
 
-      {/* Registration Modal */}
+      {/* Registration/Edit Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
               <div className="modal-title">
                 <i className="fas fa-users users-green"></i>
-                <h2>Resident Registration</h2>
+                <h2>
+                  {isEditMode ? "Edit Resident" : "Resident Registration"}
+                </h2>
               </div>
               <button
                 className="close-button"
@@ -330,18 +453,83 @@ const Residents = () => {
               </div>
 
               <div className="form-actions">
-                <button type="submit" className="submit-button">
-                  Submit
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={formLoading}
+                >
+                  {formLoading ? (
+                    <div className="spinner white">
+                      <div className="bounce1"></div>
+                      <div className="bounce2"></div>
+                      <div className="bounce3"></div>
+                    </div>
+                  ) : isEditMode ? (
+                    "Update"
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
                 <button
                   type="button"
                   className="clear-button"
                   onClick={handleClear}
+                  disabled={formLoading}
                 >
                   Clear
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content delete-modal">
+            <div className="modal-header">
+              <div className="modal-title">
+                <i className="fas fa-exclamation-triangle warning-icon"></i>
+                <h2>Confirm Deletion</h2>
+              </div>
+              <button
+                className="close-button"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="delete-message">
+              Are you sure you want to delete this resident? This action cannot
+              be undone.
+            </div>
+
+            <div className="delete-actions">
+              <button
+                className="delete-confirm-button"
+                onClick={handleDeleteResident}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <div className="spinner white">
+                    <div className="bounce1"></div>
+                    <div className="bounce2"></div>
+                    <div className="bounce3"></div>
+                  </div>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+              <button
+                className="delete-cancel-button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { connect } from "react-redux";
 import { login } from "../actions/auth";
 import "./Login.css";
@@ -38,9 +38,14 @@ const Login = ({ login, isAuthenticated }) => {
     setShowPassword(!showPassword);
   };
 
+  const location = useLocation();
+
   // Redirect if authenticated
   if (isAuthenticated) {
-    return <Navigate to="/" />;
+    // Check if there's a redirect path in the location state
+    const { state } = location;
+    const redirectPath = state?.from || "/";
+    return <Navigate to={redirectPath} />;
   }
 
   return (

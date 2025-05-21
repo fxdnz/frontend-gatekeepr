@@ -17,8 +17,13 @@ const Header = ({ user }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Apply dark mode class to body when darkMode state changes
+  // Update the useEffect for dark mode to load from localStorage
   useEffect(() => {
+    // Load dark mode preference from localStorage on initial load
+    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+    setDarkMode(savedDarkMode);
+
+    // Apply dark mode class to body when darkMode state changes
     if (darkMode) {
       document.body.classList.add("dark-mode");
     } else {
@@ -46,9 +51,11 @@ const Header = ({ user }) => {
     });
   };
 
-  // Toggle between dark mode and light mode
+  // Update the toggleDarkMode function to save to localStorage
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", newDarkMode.toString());
   };
 
   return (
