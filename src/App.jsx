@@ -5,11 +5,14 @@ import Login from "./pages/Login";
 import Signup from "./pages/SignUp";
 import Activate from "./pages/Activate";
 import ResetPassword from "./pages/ResetPassword";
+import Logs from "./pages/Logs";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import Layout from "./hocs/Layout";
 
 import { Provider } from "react-redux";
 import store from "./store";
+import PrivateRoute from "./components/PrivateRoute"; // Add this line
+import Residents from "./pages/Residents";
 
 const App = () => {
   return (
@@ -17,7 +20,7 @@ const App = () => {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -26,6 +29,33 @@ const App = () => {
               element={<ResetPasswordConfirm />}
             />
             <Route path="/activate/:uid/:token" element={<Activate />} />
+
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/logs"
+              element={
+                <PrivateRoute>
+                  <Logs />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents"
+              element={
+                <PrivateRoute>
+                  <Residents />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </Layout>
       </Router>

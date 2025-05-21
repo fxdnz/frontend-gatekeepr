@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { login } from "../actions/auth";
+import "./Login.css";
 
 const Login = ({ login, isAuthenticated }) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const { email, password } = formData;
 
@@ -19,49 +24,106 @@ const Login = ({ login, isAuthenticated }) => {
     login(email, password);
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   // Redirect if authenticated
   if (isAuthenticated) {
     return <Navigate to="/" />;
   }
 
   return (
-    <div className="container mt-5">
-      <h1>Sign In</h1>
-      <p>Sign into your Account</p>
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <input
-            className="form-control"
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            placeholder="Email"
-            required
-          />
+    <div className="login-container">
+      <div className="login-left">
+        <div className="overlay-text">
+          <h1>
+            A Residential Vehicle Access Control System Utilizing RFID and OCR
+            Technology
+          </h1>
+          <div className="caption">
+            A Capstone Project by BSIT 3rd Year Students | USTP - CDO Campus |
+            Team 5ive
+          </div>
         </div>
-        <div className="form-group mt-3">
-          <input
-            className="form-control"
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            placeholder="Password"
-            required
-          />
-        </div>
+      </div>
+      <div className="login-right">
+        <div className="login-form-container">
+          <div className="logo">
+            <img src="/gatekeepr-logo.png" alt="gatekeepr" />
+          </div>
 
-        <button className="btn btn-primary mt-3" type="submit">
-          Login
-        </button>
-      </form>
-      <p className="mt-3">
-        Don't have an account? <Link to="/signup">Register</Link>
-      </p>
-      <p className="mt-3">
-        Forgot Password? <Link to="/reset-password">Reset Password</Link>
-      </p>
+          <h1 className="welcome-text">Welcome Back</h1>
+
+          <form onSubmit={onSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                onChange={onChange}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={password}
+                  onChange={onChange}
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <i className="eye-icon">👁️</i>
+                  ) : (
+                    <i className="eye-icon">👁️‍🗨️</i>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-footer">
+              <div className="remember-me">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <Link to="/reset-password" className="forgot-password">
+                Forgot Password
+              </Link>
+            </div>
+
+            <button className="sign-in-button" type="submit">
+              Sign in
+            </button>
+            <div className="create-account">
+              <p>
+                Doesn't have an account?{" "}
+                <Link to="/signup" className="create-account-link">
+                  Create account
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

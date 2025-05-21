@@ -1,0 +1,195 @@
+/* Header Styles */
+.header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  margin-bottom: 1.5rem;
+  background-color: white;
+  border-bottom: 1px solid #eaeaea;
+  margin-left: 1.9rem;
+  margin-right: 1.9rem;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-datetime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.date {
+  font-size: 14px;
+  color: #666;
+}
+
+.time {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Dark Mode Toggle Styles */
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+  background-color: #f5f5f5;
+}
+
+.theme-toggle:hover {
+  background-color: #e0e0e0;
+}
+
+.theme-toggle.active {
+  background-color: #333;
+  color: #fff;
+}
+
+/* User Profile Styles */
+/* User Profile Styles */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.user-profile:hover {
+  background-color: #f0f0f0;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 18px;
+}
+
+.user-icon {
+  font-size: 18px;
+}
+
+/* If using image avatars */
+.avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #777;
+}
+
+.dropdown-icon {
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .theme-toggle {
+  background-color: #333;
+  color: #fff;
+}
+
+body.dark-mode .header,
+body.dark-mode .sidebar,
+body.dark-mode .recent-activities {
+  background-color: #1e1e1e;
+  border-color: #333;
+}
+
+body.dark-mode .header-title,
+body.dark-mode .sidebar-brand,
+body.dark-mode .user-name,
+body.dark-mode .recent-activities h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .sidebar-item {
+  color: #aaa;
+}
+
+body.dark-mode .sidebar-item:hover {
+  background-color: #2a2a2a;
+}
+
+body.dark-mode .sidebar-item.active {
+  background-color: #2a2a2a;
+  border-left-color: #00c07f;
+}
+
+body.dark-mode .activities-table th,
+body.dark-mode .activities-table td {
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .time-sub,
+body.dark-mode .user-role,
+body.dark-mode .date {
+  color: #aaa;
+}
+body.dark-mode .time {
+  color: #dfdfdf;
+}
+
+body.dark-mode .sidebar-header,
+body.dark-mode .sidebar-footer {
+  border-color: #333;
+}
+
+body.dark-mode .user-profile:hover {
+  background-color: #2a2a2a;
+}
+
+body.dark-mode .tab-button {
+  color: #aaa;
+}
+
+body.dark-mode .tab-button.active {
+  color: #00c07f;
+  border-color: #00c07f;
+}

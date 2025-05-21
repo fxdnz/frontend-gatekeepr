@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { signup } from "../actions/auth";
+import "./SignUp.css";
 
 const SignUp = ({ signup, isAuthenticated }) => {
   const [accountCreated, setAccountCreated] = useState(false);
@@ -11,6 +14,8 @@ const SignUp = ({ signup, isAuthenticated }) => {
     password: "",
     re_password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { name, email, password, re_password } = formData;
 
@@ -28,6 +33,14 @@ const SignUp = ({ signup, isAuthenticated }) => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   if (isAuthenticated) {
     return <Navigate to="/" />;
   }
@@ -36,62 +49,120 @@ const SignUp = ({ signup, isAuthenticated }) => {
   }
 
   return (
-    <div className="container mt-5">
-      <h1>Sign Up</h1>
-      <p>Create your Account</p>
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <input
-            className="form-control"
-            type="text"
-            name="name"
-            value={name}
-            onChange={onChange}
-            placeholder="Name"
-            required
-          />
+    <div className="signup-container">
+      <div className="signup-left">
+        <div className="overlay-text">
+          <h1>
+            A Residential Vehicle Access Control System Utilizing RFID and OCR
+            Technology
+          </h1>
+          <div className="caption">
+            A Capstone Project by BSIT 3rd Year Students | USTP - CDO Campus |
+            Team 5ive
+          </div>
         </div>
-        <div className="form-group mt-3">
-          <input
-            className="form-control"
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            placeholder="Email"
-            required
-          />
-        </div>
-        <div className="form-group mt-3">
-          <input
-            className="form-control"
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            placeholder="Password"
-            required
-          />
-        </div>
-        <div className="form-group mt-3">
-          <input
-            className="form-control"
-            type="password"
-            name="re_password"
-            value={re_password}
-            onChange={onChange}
-            placeholder="Confirm Password"
-            required
-          />
-        </div>
+      </div>
+      <div className="signup-right">
+        <div className="signup-form-container">
+          <div className="logo">
+            <img src="/gatekeepr-logo.png" alt="gatekeepr" />
+          </div>
 
-        <button className="btn btn-primary mt-3" type="submit">
-          Sign Up
-        </button>
-      </form>
-      <p className="mt-3">
-        Already have an account? <Link to="/login">Sign In</Link>
-      </p>
+          <h1 className="welcome-text">Create Account</h1>
+
+          <form onSubmit={onSubmit}>
+            <div className="form-group">
+              <label htmlFor="name">Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={name}
+                onChange={onChange}
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                onChange={onChange}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={password}
+                  onChange={onChange}
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <i className="eye-icon">👁️</i>
+                  ) : (
+                    <i className="eye-icon">👁️‍🗨️</i>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="re_password">Confirm Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="re_password"
+                  name="re_password"
+                  value={re_password}
+                  onChange={onChange}
+                  placeholder="Confirm your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={toggleConfirmPasswordVisibility}
+                >
+                  {showConfirmPassword ? (
+                    <i className="eye-icon">👁️</i>
+                  ) : (
+                    <i className="eye-icon">👁️‍🗨️</i>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button className="sign-up-button" type="submit">
+              Sign up
+            </button>
+            <div className="login-link">
+              <p>
+                Have an account?{" "}
+                <Link to="/login" className="login-account-link">
+                  Login
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

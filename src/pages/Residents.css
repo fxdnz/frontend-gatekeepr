@@ -1,0 +1,274 @@
+.residents-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.residents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.residents-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.residents-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.residents-container h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.register-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.register-button:hover {
+  background-color: #00a86b;
+}
+
+.residents-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.residents-table th {
+  text-align: left;
+  padding: 15px;
+  border-bottom: 1px solid #eaeaea;
+  color: #666;
+  font-weight: 500;
+}
+
+.residents-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eaeaea;
+  color: #333;
+}
+
+.loading,
+.error,
+.no-data {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.error {
+  color: #e53935;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.submit-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #00a86b;
+}
+.green-icon {
+  color: #00c07f;
+  margin-left: 1rem; /* A nice shade of green */
+}
+
+.users-green {
+  color: #00c07f;
+}
+.clear-button {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.clear-button:hover {
+  text-decoration: underline;
+}
+
+.form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.form-success {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+/* Dark mode styles */
+body.dark-mode .residents-container {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .residents-container h2,
+body.dark-mode .modal-title h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .residents-table th {
+  color: #aaa;
+  border-color: #333;
+}
+
+body.dark-mode .residents-table td {
+  color: #e0e0e0;
+  border-color: #333;
+}
+
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .close-button {
+  color: #aaa;
+}
+
+body.dark-mode .clear-button {
+  color: #aaa;
+}
+
+body.dark-mode .loading,
+body.dark-mode .no-data {
+  color: #aaa;
+}
+
+/* Modal white glow effect in dark mode */
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15); /* White glow */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for clarity */
+}
+
+body.dark-mode .modal-content {
+  transition: box-shadow 0.3s ease, border 0.3s ease;
+}
