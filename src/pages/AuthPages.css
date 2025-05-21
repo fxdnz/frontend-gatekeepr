@@ -1,0 +1,298 @@
+/* Shared styles for authentication pages */
+.auth-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.auth-left {
+  flex: 1;
+  background-image: url("/parking-lot.jpg");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+  color: white;
+}
+
+.overlay-text {
+  position: relative;
+  z-index: 2;
+  max-width: 80%;
+}
+
+.auth-left::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.auth-left h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.caption {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.auth-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  padding: 2rem;
+}
+
+.auth-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.logo img {
+  height: 40px;
+}
+
+.welcome-text {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.welcome-subtext {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.password-input-container {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #222;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-button:hover {
+  background-color: #000;
+}
+
+.auth-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.auth-link {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.auth-link p {
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.auth-link a {
+  color: #333;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.auth-message {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.auth-success {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+  border: 1px solid rgba(0, 192, 127, 0.2);
+}
+
+.auth-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  border: 1px solid rgba(229, 57, 53, 0.2);
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.password-strength-meter {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 0.25rem;
+  background-color: #eee;
+  overflow: hidden;
+}
+
+.password-strength-meter div {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.password-strength.weak .strength-text {
+  color: #e53935;
+}
+
+.password-strength.medium .strength-text {
+  color: #ff9800;
+}
+
+.password-strength.strong .strength-text {
+  color: #00c07f;
+}
+
+.password-strength.weak .password-strength-meter div {
+  width: 33%;
+  background-color: #e53935;
+}
+
+.password-strength.medium .password-strength-meter div {
+  width: 66%;
+  background-color: #ff9800;
+}
+
+.password-strength.strong .password-strength-meter div {
+  width: 100%;
+  background-color: #00c07f;
+}
+
+.password-match {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.password-match.match {
+  color: #00c07f;
+}
+
+.password-match.no-match {
+  color: #e53935;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    display: none;
+  }
+
+  .auth-right {
+    padding: 2rem 1rem;
+  }
+}
+
+/* Dark mode styles */
+body.dark-mode .auth-right {
+  background-color: #121212;
+}
+
+body.dark-mode .welcome-text {
+  color: #e0e0e0;
+}
+
+body.dark-mode .welcome-subtext {
+  color: #aaa;
+}
+
+body.dark-mode .form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .auth-link p,
+body.dark-mode .auth-link a {
+  color: #e0e0e0;
+}
+
+body.dark-mode .auth-button {
+  background-color: #333;
+}
+
+body.dark-mode .auth-button:hover {
+  background-color: #444;
+}
+
+body.dark-mode .auth-button:disabled {
+  background-color: #555;
+}
