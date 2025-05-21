@@ -6,7 +6,7 @@
 }
 
 .login-left {
-  flex: 2;
+  flex: 1;
   background-image: url("/parking-lot.jpg");
   background-size: cover;
   background-position: center;
@@ -149,6 +149,54 @@
 
 .sign-in-button:hover {
   background-color: #000;
+}
+
+.sign-in-button.loading {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.spinner > div {
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 100%;
+  display: inline-block;
+  margin: 0 3px;
+  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes sk-bouncedelay {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Disable form elements when loading */
+input:disabled,
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .create-account {

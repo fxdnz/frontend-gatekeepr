@@ -115,9 +115,9 @@ const SignUp = ({ signup, isAuthenticated }) => {
                   onClick={togglePasswordVisibility}
                 >
                   {showPassword ? (
-                    <i className="eye-icon">👁️</i>
+                    <i className="fas fa-eye"></i>
                   ) : (
-                    <i className="eye-icon">👁️‍🗨️</i>
+                    <i className="fas fa-eye-slash"></i>
                   )}
                 </button>
               </div>
@@ -140,10 +140,10 @@ const SignUp = ({ signup, isAuthenticated }) => {
                   className="password-toggle"
                   onClick={toggleConfirmPasswordVisibility}
                 >
-                  {showConfirmPassword ? (
-                    <i className="eye-icon">👁️</i>
+                  {showPassword ? (
+                    <i className="fas fa-eye"></i>
                   ) : (
-                    <i className="eye-icon">👁️‍🗨️</i>
+                    <i className="fas fa-eye-slash"></i>
                   )}
                 </button>
               </div>

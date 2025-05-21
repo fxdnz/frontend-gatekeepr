@@ -13,15 +13,25 @@ const Login = ({ login, isAuthenticated }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { email, password } = formData;
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    login(email, password);
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+    } finally {
+      // In case there's an error, we still want to stop loading
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000); // Add a small delay to show loading state even if login is quick
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -66,6 +76,7 @@ const Login = ({ login, isAuthenticated }) => {
                 onChange={onChange}
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -80,16 +91,18 @@ const Login = ({ login, isAuthenticated }) => {
                   onChange={onChange}
                   placeholder="Enter your password"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={togglePasswordVisibility}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
-                    <i className="eye-icon">👁️</i>
+                    <i className="fas fa-eye"></i>
                   ) : (
-                    <i className="eye-icon">👁️‍🗨️</i>
+                    <i className="fas fa-eye-slash"></i>
                   )}
                 </button>
               </div>
@@ -102,6 +115,7 @@ const Login = ({ login, isAuthenticated }) => {
                   id="remember"
                   checked={rememberMe}
                   onChange={() => setRememberMe(!rememberMe)}
+                  disabled={isLoading}
                 />
                 <label htmlFor="remember">Remember me</label>
               </div>
@@ -110,8 +124,20 @@ const Login = ({ login, isAuthenticated }) => {
               </Link>
             </div>
 
-            <button className="sign-in-button" type="submit">
-              Sign in
+            <button
+              className={`sign-in-button ${isLoading ? "loading" : ""}`}
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="spinner">
+                  <div className="bounce1"></div>
+                  <div className="bounce2"></div>
+                  <div className="bounce3"></div>
+                </div>
+              ) : (
+                "Sign in"
+              )}
             </button>
             <div className="create-account">
               <p>
