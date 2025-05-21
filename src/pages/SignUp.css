@@ -123,10 +123,18 @@
   cursor: pointer;
   transition: background-color 0.2s;
   box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .sign-up-button:hover {
   background-color: #000;
+}
+
+.sign-up-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
 }
 
 .login-link {
@@ -149,6 +157,86 @@
   text-decoration: underline;
 }
 
+/* Password strength indicator */
+.password-strength {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.password-strength-meter {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 0.25rem;
+  background-color: #eee;
+  overflow: hidden;
+}
+
+.password-strength-meter div {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.password-strength.weak .strength-text {
+  color: #e53935;
+}
+
+.password-strength.medium .strength-text {
+  color: #ff9800;
+}
+
+.password-strength.strong .strength-text {
+  color: #00c07f;
+}
+
+.password-strength.weak .password-strength-meter div {
+  width: 33%;
+  background-color: #e53935;
+}
+
+.password-strength.medium .password-strength-meter div {
+  width: 66%;
+  background-color: #ff9800;
+}
+
+.password-strength.strong .password-strength-meter div {
+  width: 100%;
+  background-color: #00c07f;
+}
+
+.password-match {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.password-match.match {
+  color: #00c07f;
+}
+
+.password-match.no-match {
+  color: #e53935;
+}
+
+/* Success message */
+.success-message {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 192, 127, 0.2);
+}
+
+/* Error message */
+.error-message {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(229, 57, 53, 0.2);
+}
+
 @media (max-width: 768px) {
   .signup-container {
     flex-direction: column;
@@ -161,4 +249,40 @@
   .signup-right {
     padding: 2rem 1rem;
   }
+}
+
+/* Dark mode styles */
+body.dark-mode .signup-right {
+  background-color: #121212;
+}
+
+body.dark-mode .welcome-text {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .login-link p,
+body.dark-mode .login-account-link {
+  color: #e0e0e0;
+}
+
+body.dark-mode .sign-up-button {
+  background-color: #333;
+}
+
+body.dark-mode .sign-up-button:hover {
+  background-color: #444;
+}
+
+body.dark-mode .sign-up-button:disabled {
+  background-color: #555;
 }
