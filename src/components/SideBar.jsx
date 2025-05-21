@@ -3,7 +3,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { logout, checkAuthenticated, load_user } from "../actions/auth";
-import "./Sidebar.css";
+import "./SideBar.css";
 import { useState, useEffect } from "react";
 
 const Sidebar = ({
