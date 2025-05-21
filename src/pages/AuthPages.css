@@ -151,12 +151,12 @@
 }
 
 .auth-link p {
-  color: #333;
+  color: #d6d6d6;
   font-size: 0.9rem;
 }
 
 .auth-link a {
-  color: #333;
+  color: #e0e0e0;
   font-weight: 500;
   text-decoration: none;
 }
