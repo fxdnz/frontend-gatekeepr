@@ -940,7 +940,16 @@
 }
 
 .location-badge {
-  /* Same styling as info-badge */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  width: fit-content;
 }
 
 .occupant-section {
