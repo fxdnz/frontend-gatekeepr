@@ -315,17 +315,28 @@ const Home = () => {
   };
 
   const toggleWebcam = useCallback(() => {
-    setWebcamActive(prev => !prev);
-    if (!webcamActive && webcamRef.current) {
+    if (webcamActive) {
+      // If webcam is currently active, turn it off
+      setWebcamActive(false);
+      setIdError(""); // Clear any previous errors
+    } else {
+      // If webcam is not active, turn it on
+      setWebcamActive(true);
+      setIdError(""); // Clear any previous errors
+      
+      // Optional: Test webcam access when turning it on
       navigator.mediaDevices.getUserMedia({ video: videoConstraints })
+        .then(() => {
+          // Webcam access successful - no need to do anything as setWebcamActive(true) already handled
+          console.log("Webcam access granted");
+        })
         .catch(err => {
+          console.error("Webcam access failed:", err);
           setIdError("Failed to access webcam: " + err.message);
-          setWebcamActive(false);
+          setWebcamActive(false); // Turn off webcam state if access fails
         });
-    } else if (!webcamActive) {
-      setIdError("Webcam initialization failed. Please try again.");
     }
-  }, [webcamActive]);
+  }, [webcamActive, videoConstraints]);
 
   if (!isAuthenticated) {
     return (
@@ -486,84 +497,104 @@ const Home = () => {
             {idError && <div className="form-error">{idError}</div>}
             {idSuccess && <div className="form-success">{idSuccess}</div>}
             <div className="id-verification-content">
-              <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginBottom: '10px' }}>
+          <div className="form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginBottom: '10px' }}>
+              <button
+                type="button"
+                className="register-button"
+                onClick={() => document.getElementById('licenseFile').click()}
+                disabled={idLoading}
+              >
+                <i className="fas fa-upload"></i> Choose File
+              </button>
+              <button
+                type="button"
+                className="register-button"
+                onClick={toggleWebcam}
+                disabled={idLoading}
+              >
+                <i className="fas fa-camera"></i> {webcamActive ? "Stop Webcam" : "Start Webcam"}
+              </button>
+            </div>
+            <input
+              type="file"
+              id="licenseFile"
+              accept="image/*"
+              onChange={(e) => setLicenseFile(e.target.files[0])}
+              className="hidden-file-input"
+            />
+            
+            {/* Image Preview Section */}
+            {licenseFile && (
+              <div className="image-preview-container">
+                <div>
+                  <img
+                    src={URL.createObjectURL(licenseFile)}
+                    alt="License Preview"
+                    className="image-preview"
+                  />
+                  <div className="image-info">
+                    <strong>File:</strong> {licenseFile.name} ({(licenseFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {licenseFile && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  className="register-button process-license-button"
+                  onClick={handleProcessLicense}
+                  disabled={idLoading}
+                >
+                  {idLoading ? (
+                    <div className="spinner white">
+                      <div className="bounce1"></div>
+                      <div className="bounce2"></div>
+                      <div className="bounce3"></div>
+                    </div>
+                  ) : (
+                    "Process License"
+                  )}
+                </button>
+              </div>
+            )}
+            
+            {webcamActive && (
+              <div>
+                <Webcam
+                  audio={false}
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={videoConstraints}
+                  style={{ width: '100%', marginTop: '10px', border: '2px solid #ccc', borderRadius: '4px' }}
+                />
+                <div className="capture-button-container">
                   <button
                     type="button"
-                    className="register-button"
-                    onClick={() => document.getElementById('licenseFile').click()}
+                    className="capture-process-button"
+                    onClick={handleProcessLicense}
                     disabled={idLoading}
                   >
-                    <i className="fas fa-upload"></i> Choose File
-                  </button>
-                  <button
-                    type="button"
-                    className="register-button"
-                    onClick={toggleWebcam}
-                    disabled={idLoading}
-                  >
-                    <i className="fas fa-camera"></i> {webcamActive ? "Stop Webcam" : "Start Webcam"}
+                    {idLoading ? (
+                      <div className="spinner white">
+                        <div className="bounce1"></div>
+                        <div className="bounce2"></div>
+                        <div className="bounce3"></div>
+                      </div>
+                    ) : (
+                      "Capture and Process"
+                    )}
                   </button>
                 </div>
-                <input
-                  type="file"
-                  id="licenseFile"
-                  accept="image/*"
-                  onChange={(e) => setLicenseFile(e.target.files[0])}
-                  className="hidden-file-input"
-                />
-                {licenseFile && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                    <button
-                      type="button"
-                      className="register-button process-license-button"
-                      onClick={handleProcessLicense}
-                      disabled={idLoading}
-                    >
-                       {idLoading ? (
-                        <div className="spinner white">
-                          <div className="bounce1"></div>
-                          <div className="bounce2"></div>
-                          <div className="bounce3"></div>
-                        </div>
-                      ) : (
-                         "Process License"
-                      )}
-                    </button>
-                  </div>
-                )}
-                {webcamActive && (
-                  <div>
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={videoConstraints}
-                      style={{ width: '100%', marginTop: '10px', border: '2px solid #ccc', borderRadius: '4px' }}
-                    />
-                    <button
-                      type="button"
-                      className="register-button"
-                      onClick={handleProcessLicense}
-                      disabled={idLoading}
-                    >
-                      {idLoading ? (
-                        <div className="spinner white">
-                          <div className="bounce1"></div>
-                          <div className="bounce2"></div>
-                          <div className="bounce3"></div>
-                        </div>
-                      ) : (
-                        "Capture and Process"
-                      )}
-                    </button>
-                  </div>
-                )}
               </div>
+            )}
+          </div>
               {extractedData && Object.keys(extractedData).length > 0 && (
                 <div>
                   <div className="extracted-data">
-                    <h3>Extracted Information</h3>
+                    <h3>ID Information</h3>
                     {extractedData.error ? (
                       <p className="error">{extractedData.error}</p>
                     ) : (
