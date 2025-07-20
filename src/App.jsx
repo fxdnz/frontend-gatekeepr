@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -8,6 +7,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Logs from "./pages/Logs";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import Layout from "./hocs/Layout";
+import Parking from "./pages/Parking";
 
 import { Provider } from "react-redux";
 import store from "./store";
@@ -53,6 +53,14 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <Residents />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/parking"
+              element={
+                <PrivateRoute>
+                  <Parking />
                 </PrivateRoute>
               }
             />
