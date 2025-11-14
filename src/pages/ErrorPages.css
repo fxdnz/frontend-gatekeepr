@@ -1,0 +1,158 @@
+/* Error Pages Styling */
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+  padding: 20px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.error-logo {
+  font-size: 80px;
+  margin-bottom: 20px;
+  color: #0b5e3b;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.error-code {
+  font-size: 120px;
+  font-weight: bold;
+  color: #0b5e3b;
+  margin: 20px 0;
+  line-height: 1;
+  opacity: 0.15;
+}
+
+.error-title {
+  font-size: 36px;
+  color: #111827;
+  margin: 20px 0 16px;
+  font-weight: 600;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #666;
+  margin: 16px 0 32px;
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.error-button.primary {
+  background: #0b5e3b;
+  color: #fff;
+}
+
+.error-button.primary:hover {
+  background: #094a2f;
+  box-shadow: 0 4px 12px rgba(11, 94, 59, 0.3);
+  transform: translateY(-2px);
+}
+
+.error-button.secondary {
+  background: #f0f0f0;
+  color: #111827;
+  border: 2px solid #e0e0e0;
+}
+
+.error-button.secondary:hover {
+  background: #e8e8e8;
+  border-color: #0b5e3b;
+  color: #0b5e3b;
+}
+
+/* Dark mode support */
+body.dark-mode .error-container {
+  background: linear-gradient(135deg, #0b1220 0%, #081426 100%);
+}
+
+body.dark-mode .error-content {
+  background: #0b1220;
+  color: #e6eef8;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .error-title {
+  color: #e6eef8;
+}
+
+body.dark-mode .error-message {
+  color: #a0aec0;
+}
+
+body.dark-mode .error-button.secondary {
+  background: #081426;
+  color: #e6eef8;
+  border-color: #1a2a42;
+}
+
+body.dark-mode .error-button.secondary:hover {
+  background: #0f2438;
+  border-color: #0b5e3b;
+  color: #9ee6c0;
+}
+
+@media (max-width: 600px) {
+  .error-content {
+    padding: 30px 20px;
+  }
+
+  .error-code {
+    font-size: 80px;
+  }
+
+  .error-title {
+    font-size: 28px;
+  }
+
+  .error-message {
+    font-size: 14px;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

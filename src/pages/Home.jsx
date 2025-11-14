@@ -578,11 +578,14 @@ const Home = () => {
                     disabled={idLoading}
                   >
                     {idLoading ? (
-                      <div className="spinner white">
-                        <div className="bounce1"></div>
-                        <div className="bounce2"></div>
-                        <div className="bounce3"></div>
-                      </div>
+                      <span className="btn-loading">
+                        <span className="btn-spinner">
+                          <span className="bounce1"></span>
+                          <span className="bounce2"></span>
+                          <span className="bounce3"></span>
+                        </span>
+                        Capturing...
+                      </span>
                     ) : (
                       "Capture and Process"
                     )}
@@ -592,7 +595,7 @@ const Home = () => {
             )}
           </div>
               {extractedData && Object.keys(extractedData).length > 0 && (
-                <div>
+                <div className="extracted-data-scrollable">
                   <div className="extracted-data">
                     <h3>ID Information</h3>
                     {extractedData.error ? (

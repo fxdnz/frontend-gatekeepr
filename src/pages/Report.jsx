@@ -157,18 +157,19 @@ const Report = () => {
               </div>
               <div className="header-buttons">
                 <button className="register-button" onClick={generatePDF} disabled={loading || pdfGenerating}>
-                  <i className="fas fa-file-pdf"></i>
                   {pdfGenerating ? (
-                    <>
-                      <span style={{ marginRight: "6px" }}>Generating...</span>
-                      <div className="spinner white" style={{ display: "inline-block", marginLeft: "4px" }}>
-                        <div className="bounce1"></div>
-                        <div className="bounce2"></div>
-                        <div className="bounce3"></div>
-                      </div>
-                    </>
+                    <span className="btn-loading">
+                      <span className="btn-spinner">
+                        <span className="bounce1"></span>
+                        <span className="bounce2"></span>
+                        <span className="bounce3"></span>
+                      </span>
+                      Generating...
+                    </span>
                   ) : (
-                    "Generate PDF"
+                    <>
+                      <i className="fas fa-file-pdf"></i> Generate PDF
+                    </>
                   )}
                 </button>
               </div>

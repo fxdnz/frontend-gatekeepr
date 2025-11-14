@@ -188,3 +188,43 @@ body.dark-mode .report-meta {
   .report-filters { flex-direction: column; align-items: stretch; }
   .report-table td, .report-table th { font-size: 12px; }
 }
+
+/* Button loading animation */
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-spinner {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.btn-spinner span {
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  border-radius: 100%;
+  display: inline-block;
+  animation: bouncing-btn-delay 1.4s infinite ease-in-out both;
+}
+
+.btn-spinner .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.btn-spinner .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes bouncing-btn-delay {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

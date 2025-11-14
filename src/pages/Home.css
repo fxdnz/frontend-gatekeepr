@@ -316,8 +316,44 @@ body.dark-mode .image-info {
   padding: 20px;
   width: 100%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark-mode .modal-content {
+  background-color: #121212;
+}
+
+body.dark-mode .modal-content::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+body.dark-mode .modal-content::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-mode .modal-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }
 
 .id-verification-layout {
@@ -522,10 +558,10 @@ body.dark-mode .form-actions-bottom {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .submit-button,
-.clear-button,
 .process-button {
   padding: 10px 20px;
   border: none;
@@ -533,6 +569,11 @@ body.dark-mode .form-actions-bottom {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
 }
 
 .process-license-button {
@@ -555,7 +596,7 @@ body.dark-mode .form-actions-bottom {
 }
 
 .clear-button {
-  padding: 10px 20px; /* Same padding as submit-button */
+  padding: 10px 20px;
   background-color: #eaeaea;
   color: #333;
   border: none;
@@ -563,15 +604,52 @@ body.dark-mode .form-actions-bottom {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  min-width: 120px; /* Add minimum width to match submit button */
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
+  height: 40px;
+  transform: translateY(-6px); /* nudge up slightly more for alignment */
 }
 
 .clear-button:hover {
   background-color: #d5d5d5;
+}
+
+.extracted-data-scrollable {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin: 0;
+}
+
+.extracted-data-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.extracted-data-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.extracted-data-scrollable::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.extracted-data-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark-mode .extracted-data-scrollable::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+body.dark-mode .extracted-data-scrollable::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-mode .extracted-data-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }
 
 .extracted-data {

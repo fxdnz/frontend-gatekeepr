@@ -8,6 +8,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Logs from "./pages/Logs";
 import Report from "./pages/Report";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
+import Forbidden from "./pages/Forbidden";
+import NotFound from "./pages/NotFound";
 import Layout from "./hocs/Layout";
 
 import { Provider } from "react-redux";
@@ -65,6 +67,10 @@ const App = () => {
                 </PrivateRoute>
               }
             />
+
+            {/* Error Routes */}
+            <Route path="/403" element={<Forbidden />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
       </Router>
