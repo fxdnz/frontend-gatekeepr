@@ -6,6 +6,7 @@ import Signup from "./pages/SignUp";
 import Activate from "./pages/Activate";
 import ResetPassword from "./pages/ResetPassword";
 import Logs from "./pages/Logs";
+import Report from "./pages/Report";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import Layout from "./hocs/Layout";
 
@@ -45,6 +46,14 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <Logs />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute>
+                  <Report />
                 </PrivateRoute>
               }
             />

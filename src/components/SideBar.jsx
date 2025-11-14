@@ -104,6 +104,18 @@ const Sidebar = ({
           </div>
           <span>Residents</span>
         </Link>
+
+        <Link
+          to="/reports"
+          className={`sidebar-item ${
+            location.pathname === "/reports" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-file-pdf"></i>
+          </div>
+          <span>Reports</span>
+        </Link>
       </div>
 
       <div className="sidebar-footer">

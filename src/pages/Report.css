@@ -1,0 +1,190 @@
+/* Basic styles that follow the existing dashboard look and table styles */
+.report-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.report-filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.report-filters input,
+.report-filters select {
+  padding: 8px 12px;
+  border: 2px solid #0b5e3b;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.report-filters input:focus,
+.report-filters select:focus {
+  outline: none;
+  border-color: #0b5e3b;
+  box-shadow: 0 0 0 3px rgba(11, 94, 59, 0.1);
+}
+
+/* Style the calendar icon color */
+.report-filters input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.3) sepia(0.8) hue-rotate(80deg) saturate(2);
+}
+
+/* Dark mode for filter inputs */
+body.dark-mode .report-filters input,
+body.dark-mode .report-filters select {
+  background: #0b1220;
+  color: #e6eef8;
+  border-color: #0b5e3b;
+}
+
+body.dark-mode .report-filters input:focus,
+body.dark-mode .report-filters select:focus {
+  border-color: #0b5e3b;
+  box-shadow: 0 0 0 3px rgba(11, 94, 59, 0.2);
+}
+
+.report-preview {
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.report-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.report-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.report-logo {
+  height: 80px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.report-title-section {
+  flex: 1;
+}
+
+.report-title-section h3 {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  color: #0b5e3b;
+}
+
+.report-user-info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.report-user-info-header p {
+  margin: 0;
+}
+
+.report-meta {
+  font-size: 12px;
+  color: #666;
+}
+
+.report-table th, .report-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.report-table thead th {
+  background: #fafafa;
+  text-align: left;
+}
+
+.report-section {
+  margin-top: 18px;
+}
+
+.section-title {
+  margin: 8px 0 6px;
+  font-size: 16px;
+  color: #0b5e3b;
+}
+
+/* Dark mode support (match app dark theme) */
+body.dark-mode .report-preview {
+  background: #0b1220;
+  color: #e6eef8;
+  box-shadow: none;
+}
+
+body.dark-mode .report-table thead th {
+  background: #081426;
+  color: #cfe7ff;
+}
+
+body.dark-mode .report-table th,
+body.dark-mode .report-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: #e6eef8;
+}
+
+body.dark-mode .section-title {
+  color: #9ee6c0;
+}
+
+body.dark-mode .report-meta {
+  color: #a0aec0;
+}
+
+/* Report preview is ALWAYS light (for PDF export) */
+.report-preview {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.report-preview .report-meta {
+  color: #666666 !important;
+}
+
+.report-preview .section-title {
+  color: #0b5e3b !important;
+}
+
+.report-preview .report-table thead th {
+  background: #fafafa !important;
+  color: #111827 !important;
+}
+
+.report-preview .report-table th,
+.report-preview .report-table td {
+  border-bottom: 1px solid #eee !important;
+  color: #111827 !important;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .report-filters { flex-direction: column; align-items: stretch; }
+  .report-table td, .report-table th { font-size: 12px; }
+}

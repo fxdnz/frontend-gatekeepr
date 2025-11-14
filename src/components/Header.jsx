@@ -77,6 +77,13 @@ const Header = ({ user }) => {
           <i className={`fas ${darkMode ? "fa-sun" : "fa-moon"}`}></i>
         </div>
 
+        {/* Reports Link */}
+        <div className="header-link">
+          <a href="/reports" title="Reports">
+            <i className="fas fa-file-pdf"></i>
+          </a>
+        </div>
+
         {/* User Profile */}
         <div className="user-profile">
           <div className="avatar">
