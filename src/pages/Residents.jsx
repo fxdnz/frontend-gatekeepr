@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { load_user } from "../actions/auth";
+import { API_ENDPOINTS, AUTH_ENDPOINTS, getAuthHeaders } from "../config/api";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Residents.css";
@@ -33,6 +34,9 @@ const Residents = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+
   useEffect(() => {
     if (access && !user) {
       dispatch(load_user());
@@ -47,15 +51,9 @@ const Residents = () => {
     }
 
     try {
-      const response = await axios.get(
-        `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-        {
-          headers: {
-            Authorization: `JWT ${access}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get(API_ENDPOINTS.RESIDENTS, {
+        headers: getAuthHeaders(access),
+      });
       setResidents(response.data);
     } catch (err) {
       console.error("Error fetching residents:", err);
@@ -67,12 +65,9 @@ const Residents = () => {
           );
         } else if (err.response.status === 401) {
           try {
-            const refreshResponse = await axios.post(
-              `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
-              {
-                refresh: localStorage.getItem("refresh"),
-              }
-            );
+            const refreshResponse = await axios.post(AUTH_ENDPOINTS.REFRESH, {
+              refresh: localStorage.getItem("refresh"),
+            });
 
             localStorage.setItem("access", refreshResponse.data.access);
             dispatch({
@@ -80,15 +75,9 @@ const Residents = () => {
               payload: refreshResponse.data,
             });
 
-            const retryResponse = await axios.get(
-              `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-              {
-                headers: {
-                  Authorization: `JWT ${refreshResponse.data.access}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
+            const retryResponse = await axios.get(API_ENDPOINTS.RESIDENTS, {
+              headers: getAuthHeaders(refreshResponse.data.access),
+            });
             setResidents(retryResponse.data);
           } catch (refreshError) {
             console.error("Token refresh failed:", refreshError);
@@ -155,15 +144,9 @@ const Residents = () => {
   const handleDeleteResident = async () => {
     setDeleteLoading(true);
     try {
-      await axios.delete(
-        `https://gatekeepr-backend.onrender.com/api/v1/residents/${currentResidentId}/`,
-        {
-          headers: {
-            Authorization: `JWT ${access}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.delete(`${API_ENDPOINTS.RESIDENTS}${currentResidentId}/`, {
+        headers: getAuthHeaders(access),
+      });
 
       // Remove the deleted resident from the state
       setResidents(
@@ -192,13 +175,10 @@ const Residents = () => {
       if (isEditMode) {
         // Update existing resident
         response = await axios.put(
-          `https://gatekeepr-backend.onrender.com/api/v1/residents/${currentResidentId}/`,
+          `${API_ENDPOINTS.RESIDENTS}${currentResidentId}/`,
           formData,
           {
-            headers: {
-              Authorization: `JWT ${access}`,
-              "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(access),
           }
         );
 
@@ -211,16 +191,9 @@ const Residents = () => {
         setFormSuccess("Resident updated successfully!");
       } else {
         // Create new resident
-        response = await axios.post(
-          `https://gatekeepr-backend.onrender.com/api/v1/residents/`,
-          formData,
-          {
-            headers: {
-              Authorization: `JWT ${access}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        response = await axios.post(API_ENDPOINTS.RESIDENTS, formData, {
+          headers: getAuthHeaders(access),
+        });
 
         // Add the new resident to the list
         setResidents([...residents, response.data]);
@@ -284,6 +257,27 @@ const Residents = () => {
     setShowModal(true);
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [residents]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentResidents = residents.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(residents.length / itemsPerPage);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="login-required">
@@ -320,45 +314,67 @@ const Residents = () => {
             ) : residents.length === 0 ? (
               <div className="no-data">No residents found</div>
             ) : (
-              <table className="residents-table">
-                <thead>
-                  <tr>
-                    <th>RFID UID</th>
-                    <th>Plate Number</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Unit Number</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {residents.map((resident) => (
-                    <tr key={resident.id}>
-                      <td>{resident.rfid_uid}</td>
-                      <td>{resident.plate_number}</td>
-                      <td>{resident.name}</td>
-                      <td>{resident.phone}</td>
-                      <td>{resident.unit_number}</td>
-                      <td className="action-buttons">
-                        <button
-                          className="edit-button"
-                          onClick={() => handleEditResident(resident)}
-                          title="Edit resident"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="delete-button"
-                          onClick={() => handleDeleteClick(resident)}
-                          title="Delete resident"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </td>
+              <>
+                <table className="residents-table">
+                  <thead>
+                    <tr>
+                      <th>RFID UID</th>
+                      <th>Plate Number</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Unit Number</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentResidents.map((resident) => (
+                      <tr key={resident.id}>
+                        <td>{resident.rfid_uid}</td>
+                        <td>{resident.plate_number}</td>
+                        <td>{resident.name}</td>
+                        <td>{resident.phone}</td>
+                        <td>{resident.unit_number}</td>
+                        <td className="action-buttons">
+                          <button
+                            className="edit-button"
+                            onClick={() => handleEditResident(resident)}
+                            title="Edit resident"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="delete-button"
+                            onClick={() => handleDeleteClick(resident)}
+                            title="Delete resident"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-button"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i> Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="pagination-button"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

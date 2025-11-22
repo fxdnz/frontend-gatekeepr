@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { API_ENDPOINTS } from "../config/api";
 import "./Report.css";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import BouncingSpinner from "../components/BouncingSpinner";
-
-const ACCESS_LOGS_URL = "https://gatekeepr-backend.onrender.com/api/v1/access-logs/";
-const VISITORS_URL = "https://gatekeepr-backend.onrender.com/api/v1/visitors/";
 
 const loadExternalScript = (src) =>
   new Promise((resolve, reject) => {
@@ -41,12 +39,15 @@ const Report = () => {
       setError(null);
       try {
         const headers = {
-          headers: { Authorization: `JWT ${access}`, "Content-Type": "application/json" },
+          headers: {
+            Authorization: `JWT ${access}`,
+            "Content-Type": "application/json",
+          },
         };
 
         const [logsRes, visitorsRes] = await Promise.all([
-          axios.get(ACCESS_LOGS_URL, headers),
-          axios.get(VISITORS_URL, headers),
+          axios.get(API_ENDPOINTS.ACCESS_LOGS, headers),
+          axios.get(API_ENDPOINTS.VISITORS, headers),
         ]);
 
         setLogs(
@@ -66,7 +67,8 @@ const Report = () => {
             .map((v) => ({
               ...v,
               source: "VISITOR",
-              timestamp: v.created_at || v.timestamp || new Date().toISOString(),
+              timestamp:
+                v.created_at || v.timestamp || new Date().toISOString(),
             }))
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         );
@@ -81,12 +83,15 @@ const Report = () => {
     fetchData();
   }, [access, isAuthenticated]);
 
-  const combined = [...logs, ...visitors].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const combined = [...logs, ...visitors].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
 
   const filtered = combined.filter((item) => {
     if (filterType !== "ALL" && item.source !== filterType) return false;
     if (dateFrom && new Date(item.timestamp) < new Date(dateFrom)) return false;
-    if (dateTo && new Date(item.timestamp) > new Date(dateTo + "T23:59:59")) return false;
+    if (dateTo && new Date(item.timestamp) > new Date(dateTo + "T23:59:59"))
+      return false;
     return true;
   });
 
@@ -112,15 +117,24 @@ const Report = () => {
     setPdfGenerating(true);
     try {
       // Load external libraries from CDN if not present
-      await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
-      await loadExternalScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      await loadExternalScript(
+        "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+      );
+      await loadExternalScript(
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+      );
 
       if (!reportRef.current) return;
 
       const element = reportRef.current;
       const scale = 2;
       // Use global html2canvas and jspdf UMD
-      const canvas = await window.html2canvas(element, { scale, useCORS: true, backgroundColor: window.getComputedStyle(element).backgroundColor || '#ffffff' });
+      const canvas = await window.html2canvas(element, {
+        scale,
+        useCORS: true,
+        backgroundColor:
+          window.getComputedStyle(element).backgroundColor || "#ffffff",
+      });
       const imgData = canvas.toDataURL("image/png");
 
       const { jsPDF } = window.jspdf;
@@ -134,7 +148,9 @@ const Report = () => {
       const pdfHeight = pdfWidth / ratio;
 
       pdf.addImage(imgData, "PNG", 20, 20, pdfWidth, pdfHeight);
-      pdf.save(`gatekeepr-report-${new Date().toISOString().split("T")[0]}.pdf`);
+      pdf.save(
+        `gatekeepr-report-${new Date().toISOString().split("T")[0]}.pdf`
+      );
     } catch (err) {
       console.error(err);
       alert("Failed to generate PDF. Please check your connection.");
@@ -150,13 +166,22 @@ const Report = () => {
         <Header />
         <div className="dashboard-main no-top-padding">
           <div className="recent-activities">
-            <div className="recent-activities-header" style={{ justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                <img src="/recent-green.png" className="recent-act-logo" alt="Logo" />
+            <div
+              className="recent-activities-header"
+              style={{ justifyContent: "space-between" }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <i className="fas fa-file-pdf green-icon"></i>
                 <h2>Reports</h2>
               </div>
               <div className="header-buttons">
-                <button className="register-button" onClick={generatePDF} disabled={loading || pdfGenerating}>
+                <button
+                  className="register-button"
+                  onClick={generatePDF}
+                  disabled={loading || pdfGenerating}
+                >
                   {pdfGenerating ? (
                     <span className="btn-loading">
                       <span className="btn-spinner">
@@ -178,7 +203,10 @@ const Report = () => {
             <div className="report-filters">
               <label>
                 Type:
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
                   <option value="ALL">All</option>
                   <option value="ACCESS">Access Logs</option>
                   <option value="VISITOR">Visitors</option>
@@ -186,11 +214,19 @@ const Report = () => {
               </label>
               <label>
                 From:
-                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
               </label>
               <label>
                 To:
-                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
               </label>
             </div>
 
@@ -199,134 +235,158 @@ const Report = () => {
             ) : error ? (
               <div className="error">{error}</div>
             ) : (
-              <div className="report-preview" ref={reportRef} id="report-container">
+              <div
+                className="report-preview"
+                ref={reportRef}
+                id="report-container"
+              >
                 <div className="report-header">
                   <div className="report-header-top">
                     <div className="report-title-section">
                       <h3>Gatekeepr Report</h3>
-                      <div className="report-meta">Generated: {new Date().toLocaleString()}</div>
+                      <div className="report-meta">
+                        Generated: {new Date().toLocaleString()}
+                      </div>
                       <div className="report-user-info-header">
-                        <p><strong>Generated by:</strong> {user?.name || "Admin"}</p>
-                        <p><strong>Role:</strong> Admin</p>
+                        <p>
+                          <strong>Generated by:</strong> {user?.name || "Admin"}
+                        </p>
+                        <p>
+                          <strong>Role:</strong> Admin
+                        </p>
                       </div>
                     </div>
-                    <img src="/gatekeepr-logo-black.png" alt="Gatekeepr Logo" className="report-logo" />
+                    <img
+                      src="/gatekeepr-logo-black.png"
+                      alt="Gatekeepr Logo"
+                      className="report-logo"
+                    />
                   </div>
                 </div>
 
                 {/* Show only the filtered table based on filterType */}
                 {filterType === "ALL" && (
-                <div className="report-section">
-                  <h4 className="section-title">All Records ({allFiltered.length})</h4>
-                  <table className="activities-table report-table">
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>Source</th>
-                        <th>Name</th>
-                        <th>Plate</th>
-                        <th>Activity / Purpose</th>
-                        <th>Parking Slot</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {allFiltered.length === 0 ? (
+                  <div className="report-section">
+                    <h4 className="section-title">
+                      All Records ({allFiltered.length})
+                    </h4>
+                    <table className="activities-table report-table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: "center" }}>
-                            No records found for the selected filters.
-                          </td>
+                          <th>Timestamp</th>
+                          <th>Source</th>
+                          <th>Name</th>
+                          <th>Plate</th>
+                          <th>Activity / Purpose</th>
+                          <th>Parking Slot</th>
                         </tr>
-                      ) : (
-                        allFiltered.map((row, idx) => (
-                          <tr key={row.id || idx}>
-                            <td>{formatTime(row.timestamp)}</td>
-                            <td>{row.source}</td>
-                            <td>{row.name || row.full_name || "N/A"}</td>
-                            <td>{row.plate_number || "-"}</td>
-                            <td>{row.source === "VISITOR" ? row.purpose || "-" : row.action || row.type || "-"}</td>
-                            <td>{row.parking_slot || "-"}</td>
+                      </thead>
+                      <tbody>
+                        {allFiltered.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: "center" }}>
+                              No records found for the selected filters.
+                            </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        ) : (
+                          allFiltered.map((row, idx) => (
+                            <tr key={row.id || idx}>
+                              <td>{formatTime(row.timestamp)}</td>
+                              <td>{row.source}</td>
+                              <td>{row.name || row.full_name || "N/A"}</td>
+                              <td>{row.plate_number || "-"}</td>
+                              <td>
+                                {row.source === "VISITOR"
+                                  ? row.purpose || "-"
+                                  : row.action || row.type || "-"}
+                              </td>
+                              <td>{row.parking_slot || "-"}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
 
                 {filterType === "VISITOR" && (
-                <div className="report-section">
-                  <h4 className="section-title">Visitors ({visitorsFiltered.length})</h4>
-                  <table className="activities-table report-table">
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>Name</th>
-                        <th>Driver's License</th>
-                        <th>Plate</th>
-                        <th>Purpose</th>
-                        <th>Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visitorsFiltered.length === 0 ? (
+                  <div className="report-section">
+                    <h4 className="section-title">
+                      Visitors ({visitorsFiltered.length})
+                    </h4>
+                    <table className="activities-table report-table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: "center" }}>
-                            No visitor records.
-                          </td>
+                          <th>Timestamp</th>
+                          <th>Name</th>
+                          <th>Driver's License</th>
+                          <th>Plate</th>
+                          <th>Purpose</th>
+                          <th>Notes</th>
                         </tr>
-                      ) : (
-                        visitorsFiltered.map((row, idx) => (
-                          <tr key={row.id || idx}>
-                            <td>{formatTime(row.timestamp)}</td>
-                            <td>{row.name || "N/A"}</td>
-                            <td>{row.drivers_license || "-"}</td>
-                            <td>{row.plate_number || "-"}</td>
-                            <td>{row.purpose || "-"}</td>
-                            <td>{row.notes || row.address || "-"}</td>
+                      </thead>
+                      <tbody>
+                        {visitorsFiltered.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: "center" }}>
+                              No visitor records.
+                            </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        ) : (
+                          visitorsFiltered.map((row, idx) => (
+                            <tr key={row.id || idx}>
+                              <td>{formatTime(row.timestamp)}</td>
+                              <td>{row.name || "N/A"}</td>
+                              <td>{row.drivers_license || "-"}</td>
+                              <td>{row.plate_number || "-"}</td>
+                              <td>{row.purpose || "-"}</td>
+                              <td>{row.notes || row.address || "-"}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
 
                 {filterType === "ACCESS" && (
-                <div className="report-section">
-                  <h4 className="section-title">Residents ({residentsFiltered.length})</h4>
-                  <table className="activities-table report-table">
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>Name</th>
-                        <th>Plate</th>
-                        <th>Activity</th>
-                        <th>Type</th>
-                        <th>Parking Slot</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {residentsFiltered.length === 0 ? (
+                  <div className="report-section">
+                    <h4 className="section-title">
+                      Residents ({residentsFiltered.length})
+                    </h4>
+                    <table className="activities-table report-table">
+                      <thead>
                         <tr>
-                          <td colSpan={6} style={{ textAlign: "center" }}>
-                            No resident access records.
-                          </td>
+                          <th>Timestamp</th>
+                          <th>Name</th>
+                          <th>Plate</th>
+                          <th>Activity</th>
+                          <th>Type</th>
+                          <th>Parking Slot</th>
                         </tr>
-                      ) : (
-                        residentsFiltered.map((row, idx) => (
-                          <tr key={row.id || idx}>
-                            <td>{formatTime(row.timestamp)}</td>
-                            <td>{row.name || "N/A"}</td>
-                            <td>{row.plate_number || "-"}</td>
-                            <td>{row.action || "-"}</td>
-                            <td>{row.type || row.user_type || "-"}</td>
-                            <td>{row.parking_slot || "-"}</td>
+                      </thead>
+                      <tbody>
+                        {residentsFiltered.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: "center" }}>
+                              No resident access records.
+                            </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        ) : (
+                          residentsFiltered.map((row, idx) => (
+                            <tr key={row.id || idx}>
+                              <td>{formatTime(row.timestamp)}</td>
+                              <td>{row.name || "N/A"}</td>
+                              <td>{row.plate_number || "-"}</td>
+                              <td>{row.action || "-"}</td>
+                              <td>{row.type || row.user_type || "-"}</td>
+                              <td>{row.parking_slot || "-"}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}

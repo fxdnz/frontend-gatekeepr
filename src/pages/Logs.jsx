@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { load_user } from "../actions/auth";
+import { API_ENDPOINTS, AUTH_ENDPOINTS, getAuthHeaders } from "../config/api";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Logs.css";
 import LoadingSpinner from "../components/BouncingSpinner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faListCheck } from "@fortawesome/free-solid-svg-icons";
 
 const Logs = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -18,6 +21,8 @@ const Logs = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [filteredLogs, setFilteredLogs] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // added pagination state
+  const logsPerPage = 7;
 
   useEffect(() => {
     if (access && !user) {
@@ -26,18 +31,11 @@ const Logs = () => {
   }, [access, user, dispatch]);
 
   const fetchLogs = async (token) => {
-    const headers = {
-      Authorization: `JWT ${token}`,
-      "Content-Type": "application/json",
-    };
+    const headers = getAuthHeaders(token);
 
     const [logsResponse, visitorsResponse] = await Promise.all([
-      axios.get(`https://gatekeepr-backend.onrender.com/api/v1/access-logs/`, {
-        headers,
-      }),
-      axios.get(`https://gatekeepr-backend.onrender.com/api/v1/visitors/`, {
-        headers,
-      }),
+      axios.get(API_ENDPOINTS.ACCESS_LOGS, { headers }),
+      axios.get(API_ENDPOINTS.VISITORS, { headers }),
     ]);
 
     const processedLogs = logsResponse.data
@@ -47,7 +45,7 @@ const Logs = () => {
         parking_slot: log.parking?.slot_number || "-",
         type: log.type || log.user_type || "RESIDENT",
       }))
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // most recent first
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     setLogs(processedLogs);
     setVisitors(visitorsResponse.data);
@@ -56,12 +54,9 @@ const Logs = () => {
 
   const handleAuthError = async () => {
     try {
-      const refreshResponse = await axios.post(
-        `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
-        {
-          refresh: localStorage.getItem("refresh"),
-        }
-      );
+      const refreshResponse = await axios.post(AUTH_ENDPOINTS.REFRESH, {
+        refresh: localStorage.getItem("refresh"),
+      });
 
       localStorage.setItem("access", refreshResponse.data.access);
       dispatch({
@@ -80,7 +75,7 @@ const Logs = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!isAuthenticated) {
-        setError("Please login to view access logs");
+        setError("Please login to view logs");
         setLoading(false);
         return;
       }
@@ -126,7 +121,25 @@ const Logs = () => {
         logs.filter((log) => log.type === "VISITOR" || log.type === "Visitor")
       );
     }
+    setCurrentPage(1); // reset to first page when filter changes
   }, [activeTab, logs]);
+
+  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+  const startIndex = (currentPage - 1) * logsPerPage;
+  const endIndex = startIndex + logsPerPage;
+  const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   const formatTimeStamp = (timestamp) => {
     const date = new Date(timestamp);
@@ -161,11 +174,7 @@ const Logs = () => {
           <div className="detailed-activities">
             <div className="detailed-activities-header">
               <div className="detailed-title">
-                <img
-                  src="/recent-green.png"
-                  className="detailed-act-logo"
-                  alt="Logo"
-                />
+                <FontAwesomeIcon icon={faListCheck} className="green-icon" />
                 <h2>Detailed Activities</h2>
               </div>
 
@@ -191,46 +200,67 @@ const Logs = () => {
             ) : filteredLogs.length === 0 ? (
               <div className="no-data">No logs found</div>
             ) : (
-              <table className="logs-table">
-                <thead>
-                  <tr>
-                    <th>Time stamp</th>
-                    <th>Type</th>
-                    <th>Name</th>
-                    <th>Plate Number</th>
-                    <th>Activity</th>
-                    <th>Parking Slot</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLogs.map((log) => {
-                    const { date, time } = formatTimeStamp(log.timestamp);
-                    return (
-                      <tr key={log.id}>
-                        <td>
-                          <div className="time-main">{date}</div>
-                          <div className="time-sub">{time}</div>
-                        </td>
-                        <td>{log.type}</td>
-                        <td>{log.name || "N/A"}</td>
-                        <td>{log.plate_number}</td>
-                        <td>
-                          <span
-                            className={`activity-tag ${
-                              log.action?.toLowerCase() === "entry"
-                                ? "entry"
-                                : "exit"
-                            }`}
-                          >
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>{log.parking_slot}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <>
+                <table className="logs-table">
+                  <thead>
+                    <tr>
+                      <th>Time stamp</th>
+                      <th>Type</th>
+                      <th>Name</th>
+                      <th>Plate Number</th>
+                      <th>Activity</th>
+                      <th>Parking Slot</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedLogs.map((log) => {
+                      const { date, time } = formatTimeStamp(log.timestamp);
+                      return (
+                        <tr key={log.id}>
+                          <td>
+                            <div className="time-main">{date}</div>
+                            <div className="time-sub">{time}</div>
+                          </td>
+                          <td>{log.type}</td>
+                          <td>{log.name || "N/A"}</td>
+                          <td>{log.plate_number}</td>
+                          <td>
+                            <span
+                              className={`activity-tag ${
+                                log.action?.toLowerCase() === "entry"
+                                  ? "entry"
+                                  : "exit"
+                              }`}
+                            >
+                              {log.action}
+                            </span>
+                          </td>
+                          <td>{log.parking_slot}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-button"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="pagination-button"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

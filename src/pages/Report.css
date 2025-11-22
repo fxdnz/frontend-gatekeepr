@@ -54,7 +54,7 @@ body.dark-mode .report-filters select:focus {
   background: #fff;
   padding: 20px;
   border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .report-header {
@@ -107,7 +107,8 @@ body.dark-mode .report-filters select:focus {
   color: #666;
 }
 
-.report-table th, .report-table td {
+.report-table th,
+.report-table td {
   padding: 8px 10px;
   border-bottom: 1px solid #eee;
   font-size: 13px;
@@ -142,7 +143,7 @@ body.dark-mode .report-table thead th {
 
 body.dark-mode .report-table th,
 body.dark-mode .report-table td {
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: #e6eef8;
 }
 
@@ -184,9 +185,64 @@ body.dark-mode .report-meta {
   text-align: center;
 }
 
+/* Add infinite scroll indicator styling for reports */
+.infinite-scroll-indicator {
+  text-align: center;
+  padding: 20px;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #666;
+}
+
+body.dark-mode .infinite-scroll-indicator {
+  color: #aaa;
+}
+
+/* Make report-preview scrollable for infinite scroll */
+#report-container {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+#report-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#report-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+#report-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+#report-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark-mode #report-container::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+body.dark-mode #report-container::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark-mode #report-container::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
 @media (max-width: 800px) {
-  .report-filters { flex-direction: column; align-items: stretch; }
-  .report-table td, .report-table th { font-size: 12px; }
+  .report-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .report-table td,
+  .report-table th {
+    font-size: 12px;
+  }
 }
 
 /* Button loading animation */

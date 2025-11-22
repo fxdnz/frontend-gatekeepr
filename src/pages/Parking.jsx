@@ -8,6 +8,7 @@ import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Parking.css";
 import BouncingSpinner from "../components/BouncingSpinner";
+import { API_ENDPOINTS, AUTH_ENDPOINTS, getAuthHeaders } from "../config/api";
 
 const Parking = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -41,42 +42,27 @@ const Parking = () => {
     }
 
     try {
-      const response = await axios.get(
-        `https://gatekeepr-backend.onrender.com/api/v1/parking/`,
-        {
-          headers: {
-            Authorization: `JWT ${access}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get(API_ENDPOINTS.PARKING, {
+        headers: getAuthHeaders(access),
+      });
       console.log("Parking spaces data:", response.data); // Debug log
       setParkingSpaces(response.data);
     } catch (err) {
       console.error("Error fetching parking spaces:", err);
       if (err.response?.status === 401) {
         try {
-          const refreshResponse = await axios.post(
-            `https://gatekeepr-backend.onrender.com/auth/jwt/refresh/`,
-            {
-              refresh: localStorage.getItem("refresh"),
-            }
-          );
+          const refreshResponse = await axios.post(AUTH_ENDPOINTS.REFRESH, {
+            refresh: localStorage.getItem("refresh"),
+          });
           localStorage.setItem("access", refreshResponse.data.access);
           dispatch({
             type: "LOGIN_SUCCESS",
             payload: refreshResponse.data,
           });
           // Retry fetching
-          const retryResponse = await axios.get(
-            `https://gatekeepr-backend.onrender.com/api/v1/parking/`,
-            {
-              headers: {
-                Authorization: `JWT ${refreshResponse.data.access}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const retryResponse = await axios.get(API_ENDPOINTS.PARKING, {
+            headers: getAuthHeaders(refreshResponse.data.access),
+          });
           console.log("Retry parking spaces data:", retryResponse.data); // Debug log
           setParkingSpaces(retryResponse.data);
         } catch (refreshError) {

@@ -10,10 +10,12 @@ import Header from "../components/Header";
 import "./Home.css";
 import BouncingSpinner from "../components/BouncingSpinner";
 import Webcam from "react-webcam";
+import { API_ENDPOINTS, getAuthHeaders } from "../config/api";
 
 // Hardcoded Gemini API key (NOT RECOMMENDED FOR PRODUCTION)
-const GEMINI_API_KEY = 'AIzaSyAhFjdWTmnlrR-Zx86MrqKESnAcvSzjeGw';
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_KEY = "AIzaSyAhFjdWTmnlrR-Zx86MrqKESnAcvSzjeGw";
+const GEMINI_API_ENDPOINT =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 const Home = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -59,15 +61,9 @@ const Home = () => {
       }
 
       try {
-        const response = await axios.get(
-          `https://gatekeepr-backend.onrender.com/api/v1/access-logs/`,
-          {
-            headers: {
-              Authorization: `JWT ${access}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await axios.get(API_ENDPOINTS.ACCESS_LOGS, {
+          headers: getAuthHeaders(access),
+        });
 
         const processedLogs = response.data
           .map((log) => ({
@@ -108,16 +104,9 @@ const Home = () => {
     setVisitorLoading(true);
 
     try {
-      await axios.post(
-        "https://gatekeepr-backend.onrender.com/api/v1/visitors/",
-        visitorForm,
-        {
-          headers: {
-            Authorization: `JWT ${access}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.post(API_ENDPOINTS.VISITORS, visitorForm, {
+        headers: getAuthHeaders(access),
+      });
 
       setVisitorSuccess("Visitor logged successfully.");
       setVisitorForm({
@@ -156,14 +145,15 @@ const Home = () => {
   const convertImageToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = () => reject(new Error("Failed to read image file."));
       reader.readAsDataURL(file);
     });
   };
 
   const extractDriverLicenseInfo = async (base64Image, mimeType) => {
-    const prompt = 'Extract the following information from this Philippine driver\'s license image: last_name, first_name, middle_name, sex, home_address, license_number. Return the response in JSON format.';
+    const prompt =
+      "Extract the following information from this Philippine driver's license image: last_name, first_name, middle_name, sex, home_address, license_number. Return the response in JSON format.";
 
     const payload = {
       contents: [
@@ -172,24 +162,24 @@ const Home = () => {
             {
               inlineData: {
                 mimeType: mimeType,
-                data: base64Image
-              }
+                data: base64Image,
+              },
             },
             {
-              text: prompt
-            }
-          ]
-        }
-      ]
+              text: prompt,
+            },
+          ],
+        },
+      ],
     };
 
     const response = await fetch(GEMINI_API_ENDPOINT, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-goog-api-key': GEMINI_API_KEY
+        "Content-Type": "application/json",
+        "X-goog-api-key": GEMINI_API_KEY,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -202,7 +192,7 @@ const Home = () => {
       const jsonMatch = textResponse.match(/```json\n([\s\S]*?)\n```/);
       return jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(textResponse);
     } else {
-      return { error: 'No recognizable content from Gemini API.' };
+      return { error: "No recognizable content from Gemini API." };
     }
   };
 
@@ -219,22 +209,22 @@ const Home = () => {
     try {
       let base64Image, mimeType;
       if (licenseFile) {
-        if (!licenseFile.type.startsWith('image/')) {
-          throw new Error('Please upload an image file (e.g., JPG, PNG).');
+        if (!licenseFile.type.startsWith("image/")) {
+          throw new Error("Please upload an image file (e.g., JPG, PNG).");
         }
         base64Image = await convertImageToBase64(licenseFile);
         mimeType = licenseFile.type;
       } else if (webcamActive && webcamRef.current) {
         const screenshot = webcamRef.current.getScreenshot();
         if (!screenshot) {
-          throw new Error('Failed to capture webcam image.');
+          throw new Error("Failed to capture webcam image.");
         }
-        base64Image = screenshot.split(',')[1];
-        mimeType = 'image/jpeg';
+        base64Image = screenshot.split(",")[1];
+        mimeType = "image/jpeg";
       }
 
       const extracted = await extractDriverLicenseInfo(base64Image, mimeType);
-      console.log('Extracted Data Set:', extracted); // Debug log
+      console.log("Extracted Data Set:", extracted); // Debug log
       setExtractedData(extracted || {});
       setIdForm({ plate_number: "", purpose: "" });
     } catch (error) {
@@ -266,37 +256,39 @@ const Home = () => {
       return;
     }
 
-    const fullName = extractedData && extractedData.first_name
-      ? [extractedData.first_name, extractedData.middle_name, extractedData.last_name].filter(Boolean).join(' ')
-      : 'Unknown';
+    const fullName =
+      extractedData && extractedData.first_name
+        ? [
+            extractedData.first_name,
+            extractedData.middle_name,
+            extractedData.last_name,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        : "Unknown";
 
     const visitorData = {
       name: fullName,
-      drivers_license: extractedData?.license_number || '',
-      address: extractedData?.home_address || '',
-      plate_number: idForm.plate_number || '',
-      purpose: idForm.purpose
+      drivers_license: extractedData?.license_number || "",
+      address: extractedData?.home_address || "",
+      plate_number: idForm.plate_number || "",
+      purpose: idForm.purpose,
     };
 
     let response;
     try {
-      response = await axios.post(
-        "https://gatekeepr-backend.onrender.com/api/v1/visitors/",
-        visitorData,
-        {
-          headers: {
-            Authorization: `JWT ${access}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      response = await axios.post(API_ENDPOINTS.VISITORS, visitorData, {
+        headers: getAuthHeaders(access),
+      });
       setIdSuccess("Visitor registered successfully.");
       setLicenseFile(null);
       setExtractedData({});
       setIdForm({ plate_number: "", purpose: "" });
       setWebcamActive(false);
     } catch (error) {
-      setIdError(`Failed to register visitor: ${error.message || 'Unknown error'}`);
+      setIdError(
+        `Failed to register visitor: ${error.message || "Unknown error"}`
+      );
     }
 
     if (response) {
@@ -311,7 +303,7 @@ const Home = () => {
   const videoConstraints = {
     width: 1280,
     height: 720,
-    facingMode: "environment"
+    facingMode: "environment",
   };
 
   const toggleWebcam = useCallback(() => {
@@ -323,14 +315,15 @@ const Home = () => {
       // If webcam is not active, turn it on
       setWebcamActive(true);
       setIdError(""); // Clear any previous errors
-      
+
       // Optional: Test webcam access when turning it on
-      navigator.mediaDevices.getUserMedia({ video: videoConstraints })
+      navigator.mediaDevices
+        .getUserMedia({ video: videoConstraints })
         .then(() => {
           // Webcam access successful - no need to do anything as setWebcamActive(true) already handled
           console.log("Webcam access granted");
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Webcam access failed:", err);
           setIdError("Failed to access webcam: " + err.message);
           setWebcamActive(false); // Turn off webcam state if access fails
@@ -356,16 +349,22 @@ const Home = () => {
         <Header />
         <div className="dashboard-main no-top-padding">
           <div className="recent-activities">
-            <div className="recent-activities-header" style={{ justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
-                <img src="/recent-green.png" className="recent-act-logo" alt="Logo" />
+            <div className="recent-activities-header">
+              <div className="recent-activities-title">
+                <i className="fas fa-history green-icon"></i>
                 <h2>Recent Activities</h2>
               </div>
               <div className="header-buttons">
-                <button className="register-button" onClick={() => setShowVisitorModal(true)}>
+                <button
+                  className="register-button"
+                  onClick={() => setShowVisitorModal(true)}
+                >
                   <i className="fas fa-user-plus"></i> Log Visitor
                 </button>
-                <button className="verify-id-button" onClick={() => setShowIDVerificationModal(true)}>
+                <button
+                  className="verify-id-button"
+                  onClick={() => setShowIDVerificationModal(true)}
+                >
                   <i className="fas fa-id-card"></i> Verify ID
                 </button>
               </div>
@@ -402,7 +401,13 @@ const Home = () => {
                         <td>{log.name || "N/A"}</td>
                         <td>{log.plate_number}</td>
                         <td>
-                          <span className={`activity-tag ${log.action?.toLowerCase() === "entry" ? "entry" : "exit"}`}>
+                          <span
+                            className={`activity-tag ${
+                              log.action?.toLowerCase() === "entry"
+                                ? "entry"
+                                : "exit"
+                            }`}
+                          >
                             {log.action}
                           </span>
                         </td>
@@ -425,17 +430,30 @@ const Home = () => {
                 <i className="fas fa-user-shield users-green"></i>
                 <h2>Log Visitor</h2>
               </div>
-              <button className="close-button" onClick={() => setShowVisitorModal(false)}>
+              <button
+                className="close-button"
+                onClick={() => setShowVisitorModal(false)}
+              >
                 <i className="fas fa-times"></i>
               </button>
             </div>
             {visitorError && <div className="form-error">{visitorError}</div>}
-            {visitorSuccess && <div className="form-success">{visitorSuccess}</div>}
+            {visitorSuccess && (
+              <div className="form-success">{visitorSuccess}</div>
+            )}
             <form onSubmit={handleVisitorSubmit}>
-              {["name", "drivers_license", "address", "plate_number", "purpose"].map((field) => (
+              {[
+                "name",
+                "drivers_license",
+                "address",
+                "plate_number",
+                "purpose",
+              ].map((field) => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>
-                    {field.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    {field
+                      .replace("_", " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </label>
                   <input
                     type="text"
@@ -449,7 +467,11 @@ const Home = () => {
                 </div>
               ))}
               <div className="form-actions">
-                <button type="submit" className="submit-button" disabled={visitorLoading}>
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={visitorLoading}
+                >
                   {visitorLoading ? (
                     <div className="spinner white">
                       <div className="bounce1"></div>
@@ -490,110 +512,137 @@ const Home = () => {
                 <i className="fas fa-id-card users-green"></i>
                 <h2>Verify ID</h2>
               </div>
-              <button className="close-button" onClick={() => setShowIDVerificationModal(false)}>
+              <button
+                className="close-button"
+                onClick={() => setShowIDVerificationModal(false)}
+              >
                 <i className="fas fa-times"></i>
               </button>
             </div>
             {idError && <div className="form-error">{idError}</div>}
             {idSuccess && <div className="form-success">{idSuccess}</div>}
             <div className="id-verification-content">
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginBottom: '10px' }}>
-              <button
-                type="button"
-                className="register-button"
-                onClick={() => document.getElementById('licenseFile').click()}
-                disabled={idLoading}
-              >
-                <i className="fas fa-upload"></i> Choose File
-              </button>
-              <button
-                type="button"
-                className="register-button"
-                onClick={toggleWebcam}
-                disabled={idLoading}
-              >
-                <i className="fas fa-camera"></i> {webcamActive ? "Stop Webcam" : "Start Webcam"}
-              </button>
-            </div>
-            <input
-              type="file"
-              id="licenseFile"
-              accept="image/*"
-              onChange={(e) => setLicenseFile(e.target.files[0])}
-              className="hidden-file-input"
-            />
-            
-            {/* Image Preview Section */}
-            {licenseFile && (
-              <div className="image-preview-container">
-                <div>
-                  <img
-                    src={URL.createObjectURL(licenseFile)}
-                    alt="License Preview"
-                    className="image-preview"
-                  />
-                  <div className="image-info">
-                    <strong>File:</strong> {licenseFile.name} ({(licenseFile.size / 1024).toFixed(1)} KB)
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {licenseFile && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  className="register-button process-license-button"
-                  onClick={handleProcessLicense}
-                  disabled={idLoading}
+              <div className="form-group">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-around",
+                    alignItems: "center",
+                    marginBottom: "10px",
+                  }}
                 >
-                  {idLoading ? (
-                    <div className="spinner white">
-                      <div className="bounce1"></div>
-                      <div className="bounce2"></div>
-                      <div className="bounce3"></div>
-                    </div>
-                  ) : (
-                    "Process License"
-                  )}
-                </button>
-              </div>
-            )}
-            
-            {webcamActive && (
-              <div>
-                <Webcam
-                  audio={false}
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                  style={{ width: '100%', marginTop: '10px', border: '2px solid #ccc', borderRadius: '4px' }}
-                />
-                <div className="capture-button-container">
                   <button
                     type="button"
-                    className="capture-process-button"
-                    onClick={handleProcessLicense}
+                    className="register-button"
+                    onClick={() =>
+                      document.getElementById("licenseFile").click()
+                    }
                     disabled={idLoading}
                   >
-                    {idLoading ? (
-                      <span className="btn-loading">
-                        <span className="btn-spinner">
-                          <span className="bounce1"></span>
-                          <span className="bounce2"></span>
-                          <span className="bounce3"></span>
-                        </span>
-                        Capturing...
-                      </span>
-                    ) : (
-                      "Capture and Process"
-                    )}
+                    <i className="fas fa-upload"></i> Choose File
+                  </button>
+                  <button
+                    type="button"
+                    className="register-button"
+                    onClick={toggleWebcam}
+                    disabled={idLoading}
+                  >
+                    <i className="fas fa-camera"></i>{" "}
+                    {webcamActive ? "Stop Webcam" : "Start Webcam"}
                   </button>
                 </div>
+                <input
+                  type="file"
+                  id="licenseFile"
+                  accept="image/*"
+                  onChange={(e) => setLicenseFile(e.target.files[0])}
+                  className="hidden-file-input"
+                />
+
+                {/* Image Preview Section */}
+                {licenseFile && (
+                  <div className="image-preview-container">
+                    <div>
+                      <img
+                        src={
+                          URL.createObjectURL(licenseFile) || "/placeholder.svg"
+                        }
+                        alt="License Preview"
+                        className="image-preview"
+                      />
+                      <div className="image-info">
+                        <strong>File:</strong> {licenseFile.name} (
+                        {(licenseFile.size / 1024).toFixed(1)} KB)
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {licenseFile && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: "10px",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="register-button process-license-button"
+                      onClick={handleProcessLicense}
+                      disabled={idLoading}
+                    >
+                      {idLoading ? (
+                        <div className="spinner white">
+                          <div className="bounce1"></div>
+                          <div className="bounce2"></div>
+                          <div className="bounce3"></div>
+                        </div>
+                      ) : (
+                        "Process License"
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {webcamActive && (
+                  <div>
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={videoConstraints}
+                      style={{
+                        width: "100%",
+                        marginTop: "10px",
+                        border: "2px solid #ccc",
+                        borderRadius: "4px",
+                      }}
+                    />
+                    <div className="capture-button-container">
+                      <button
+                        type="button"
+                        className="capture-process-button"
+                        onClick={handleProcessLicense}
+                        disabled={idLoading}
+                      >
+                        {idLoading ? (
+                          <span className="btn-loading">
+                            <span className="btn-spinner">
+                              <span className="bounce1"></span>
+                              <span className="bounce2"></span>
+                              <span className="bounce3"></span>
+                            </span>
+                            Capturing...
+                          </span>
+                        ) : (
+                          "Capture and Process"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
               {extractedData && Object.keys(extractedData).length > 0 && (
                 <div className="extracted-data-scrollable">
                   <div className="extracted-data">
@@ -602,9 +651,24 @@ const Home = () => {
                       <p className="error">{extractedData.error}</p>
                     ) : (
                       <>
-                        <p><strong>Name:</strong> {[extractedData.first_name, extractedData.middle_name, extractedData.last_name].filter(Boolean).join(' ')}</p>
-                        <p><strong>Driver's License:</strong> {extractedData.license_number || 'N/A'}</p>
-                        <p><strong>Address:</strong> {extractedData.home_address || 'N/A'}</p>
+                        <p>
+                          <strong>Name:</strong>{" "}
+                          {[
+                            extractedData.first_name,
+                            extractedData.middle_name,
+                            extractedData.last_name,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </p>
+                        <p>
+                          <strong>Driver's License:</strong>{" "}
+                          {extractedData.license_number || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Address:</strong>{" "}
+                          {extractedData.home_address || "N/A"}
+                        </p>
                       </>
                     )}
                   </div>
@@ -633,7 +697,11 @@ const Home = () => {
                       />
                     </div>
                     <div className="form-actions">
-                      <button type="submit" className="submit-button" disabled={idLoading}>
+                      <button
+                        type="submit"
+                        className="submit-button"
+                        disabled={idLoading}
+                      >
                         {idLoading ? (
                           <div className="spinner white">
                             <div className="bounce1"></div>

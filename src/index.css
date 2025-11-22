@@ -8,6 +8,14 @@ body {
   color: #333;
 }
 
+/* Adding explicit font-family to button and input elements to override browser defaults */
+button,
+input,
+textarea,
+select {
+  font-family: "Outfit", sans-serif;
+}
+
 a {
   text-decoration: none;
   color: inherit;

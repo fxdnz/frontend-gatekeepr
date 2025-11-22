@@ -382,3 +382,56 @@ body.dark-mode .modal-content {
 body.dark-mode .modal-content {
   transition: box-shadow 0.3s ease, border 0.3s ease;
 }
+
+/* Add pagination controls styling */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+
+  padding-top: 15px;
+  border-top: 1px solid #eaeaea;
+}
+
+.pagination-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #00a86b;
+}
+
+.pagination-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+body.dark-mode .pagination-controls {
+  border-top-color: #333;
+}
+
+body.dark-mode .pagination-info {
+  color: #aaa;
+}
+
+body.dark-mode .pagination-button:disabled {
+  background-color: #444;
+}
