@@ -116,6 +116,17 @@ const Sidebar = ({
           </div>
           <span>Reports</span>
         </Link>
+        <Link
+          to="/parking"
+          className={`sidebar-item ${
+            location.pathname === "/parking" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-car"></i>
+          </div>
+          <span>Parking</span>
+        </Link>
       </div>
 
       <div className="sidebar-footer">
