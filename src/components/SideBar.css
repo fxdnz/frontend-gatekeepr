@@ -1,5 +1,5 @@
 .sidebar {
-  width: 240px;
+  width: 216px; /* 240px * 0.9 */
   height: 100vh;
   background-color: white;
   border-right: 1px solid #eaeaea;
@@ -8,43 +8,44 @@
   position: fixed;
   left: 0;
   top: 0;
+  z-index: 5;
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 18px; /* 20px * 0.9 */
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px; /* 10px * 0.9 */
   border-bottom: 1px solid #f5f5f5;
 }
 
 .sidebar-logo {
-  height: 32px;
+  height: 28.8px; /* 32px * 0.9 */
 }
 
 .sidebar-brand {
-  font-size: 18px;
+  font-size: 16.2px; /* 18px * 0.9 */
   font-weight: 600;
   color: #333;
 }
 
 .sidebar-menu {
   flex: 1;
-  padding: 20px 0;
+  padding: 18px 0; /* 20px 0 * 0.9 */
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4.5px; /* 5px * 0.9 */
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 10.8px 18px; /* 12px 20px * 0.9 */
   color: #666;
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
-  gap: 12px;
+  gap: 10.8px; /* 12px * 0.9 */
 }
 
 .sidebar-item:hover {
@@ -60,12 +61,12 @@
 }
 
 .sidebar-icon {
-  width: 20px;
+  width: 18px; /* 20px * 0.9 */
   display: flex;
   justify-content: center;
 }
 
 .sidebar-footer {
-  padding: 20px 0;
+  padding: 18px 0; /* 20px 0 * 0.9 */
   border-top: 1px solid #f5f5f5;
 }

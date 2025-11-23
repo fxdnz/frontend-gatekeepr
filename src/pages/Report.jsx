@@ -165,9 +165,9 @@ const Report = () => {
       <div className="dashboard-content">
         <Header />
         <div className="dashboard-main no-top-padding">
-          <div className="recent-activities">
+          <div className="report-container">
             <div
-              className="recent-activities-header"
+              className="report-container-header"
               style={{ justifyContent: "space-between" }}
             >
               <div

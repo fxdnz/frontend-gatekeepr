@@ -1,30 +1,33 @@
 .residents-container {
+  /* Add top margin to account for fixed floating header */
+  margin-top: 63px;
   background-color: white;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 9px;
+  padding: 18px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  height: 80vh;
 }
 
 .residents-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .residents-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 .residents-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 .residents-container h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #333;
   margin: 0;
@@ -34,14 +37,14 @@
   background-color: #00c07f;
   color: white;
   border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  font-size: 14px;
+  border-radius: 4.5px;
+  padding: 9px 13.5px;
+  font-size: 12.6px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7.2px;
   transition: background-color 0.2s;
 }
 
@@ -56,14 +59,14 @@
 
 .residents-table th {
   text-align: left;
-  padding: 15px;
+  padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
   color: #666;
   font-weight: 500;
 }
 
 .residents-table td {
-  padding: 15px;
+  padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
   color: #333;
 }
@@ -71,7 +74,7 @@
 .loading,
 .error,
 .no-data {
-  padding: 20px;
+  padding: 18px;
   text-align: center;
   color: #666;
 }
@@ -92,15 +95,15 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(4.5px);
 }
 
 .modal-content {
   background-color: white;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 9px;
+  padding: 18px;
   width: 100%;
-  max-width: 500px;
+  max-width: 450px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -108,17 +111,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .modal-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 .modal-title h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #333;
   margin: 0;
@@ -127,44 +130,44 @@
 .close-button {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16.2px;
   color: #666;
   cursor: pointer;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 7.2px;
   font-weight: 500;
   color: #333;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px;
+  padding: 9px;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
+  border-radius: 4.5px;
+  font-size: 12.6px;
   box-sizing: border-box;
 }
 
 .form-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  margin-top: 27px;
 }
 
 .submit-button {
   background-color: #00c07f;
   color: white;
   border: none;
-  border-radius: 5px;
-  padding: 10px 0;
-  font-size: 16px;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
   font-weight: 500;
   cursor: pointer;
   width: 100%;
@@ -176,7 +179,7 @@
 }
 .green-icon {
   color: #00c07f;
-  margin-left: 1rem; /* A nice shade of green */
+  margin-left: 0.9rem;
 }
 
 .users-green {
@@ -186,10 +189,10 @@
   background: none;
   border: none;
   color: #666;
-  padding: 10px 18px;
-  font-size: 14px;
+  padding: 9px 16.2px;
+  font-size: 12.6px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 9px;
   text-align: center;
   width: 100%;
 }
@@ -201,23 +204,23 @@
 .form-error {
   background-color: rgba(229, 57, 53, 0.1);
   color: #e53935;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  padding: 9px;
+  border-radius: 4.5px;
+  margin-bottom: 13.5px;
 }
 
 .form-success {
   background-color: rgba(0, 192, 127, 0.1);
   color: #00c07f;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  padding: 9px;
+  border-radius: 4.5px;
+  margin-bottom: 13.5px;
 }
 
 /* Action buttons */
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   justify-content: flex-start;
 }
 
@@ -226,9 +229,9 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
-  padding: 5px;
-  border-radius: 4px;
+  font-size: 14.4px;
+  padding: 4.5px;
+  border-radius: 3.6px;
   transition: background-color 0.2s;
 }
 
@@ -250,32 +253,32 @@
 
 /* Delete confirmation modal */
 .delete-modal {
-  max-width: 400px;
+  max-width: 360px;
 }
 
 .warning-icon {
   color: #ff9800;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .delete-message {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   line-height: 1.5;
   color: #333;
 }
 
 .delete-actions {
   display: flex;
-  gap: 10px;
+  gap: 9px;
 }
 
 .delete-confirm-button {
   background-color: #e53935;
   color: white;
   border: none;
-  border-radius: 5px;
-  padding: 10px 0;
-  font-size: 16px;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
   font-weight: 500;
   cursor: pointer;
   flex: 1;
@@ -290,9 +293,9 @@
   background-color: #f5f5f5;
   color: #333;
   border: none;
-  border-radius: 5px;
-  padding: 10px 0;
-  font-size: 16px;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
   font-weight: 500;
   cursor: pointer;
   flex: 1;
@@ -388,9 +391,9 @@ body.dark-mode .modal-content {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
+  gap: 13.5px;
 
-  padding-top: 15px;
+  padding-top: 13.5px;
   border-top: 1px solid #eaeaea;
 }
 
@@ -398,14 +401,14 @@ body.dark-mode .modal-content {
   background-color: #00c07f;
   color: white;
   border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  font-size: 14px;
+  border-radius: 4.5px;
+  padding: 9px 13.5px;
+  font-size: 12.6px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7.2px;
   transition: background-color 0.2s;
 }
 
@@ -419,7 +422,7 @@ body.dark-mode .modal-content {
 }
 
 .pagination-info {
-  font-size: 14px;
+  font-size: 12.6px;
   color: #666;
   font-weight: 500;
 }

@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 20px 0;
+  padding: 18px 0; /* 20px 0 * 0.9 */
 }
 
 .bouncing-spinner {
@@ -14,12 +14,12 @@
 }
 
 .bouncing-spinner > div {
-  width: 10px;
-  height: 10px;
+  width: 9px; /* 10px * 0.9 */
+  height: 9px; /* 10px * 0.9 */
   background-color: black; /* Light mode default */
   border-radius: 100%;
   display: inline-block;
-  margin: 0 3px;
+  margin: 0 2.7px; /* 0 3px * 0.9 */
   animation: bouncing-sk-bouncedelay 1.4s infinite ease-in-out both;
 }
 

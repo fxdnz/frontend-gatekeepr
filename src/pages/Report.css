@@ -1,4 +1,27 @@
 /* Basic styles that follow the existing dashboard look and table styles */
+.report-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 18px; /* 20px * 0.9 */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 63px;
+  height: 80vh;
+}
+
+.report-container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px; /* 20px * 0.9 */
+}
+
+.report-container h2 {
+  font-size: 18px; /* 20px * 0.9 */
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
 .report-filters {
   display: flex;
   gap: 12px;
@@ -36,6 +59,14 @@
   filter: invert(0.3) sepia(0.8) hue-rotate(80deg) saturate(2);
 }
 
+body.dark-mode .report-container {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .report-container h2 {
+  color: #e0e0e0;
+}
 /* Dark mode for filter inputs */
 body.dark-mode .report-filters input,
 body.dark-mode .report-filters select {
@@ -199,9 +230,11 @@ body.dark-mode .infinite-scroll-indicator {
 }
 
 /* Make report-preview scrollable for infinite scroll */
+/* Add top padding for floating header */
 #report-container {
   max-height: 700px;
   overflow-y: auto;
+  padding-top: 63px;
 }
 
 #report-container::-webkit-scrollbar {

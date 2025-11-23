@@ -7,7 +7,6 @@
 
 .parking-content {
   flex: 1;
-  margin-left: 240px;
   position: relative;
   overflow: hidden;
   background-color: #f8f9fa;
@@ -36,9 +35,9 @@
 /* Floating Filter Button */
 .filter-dropdown {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
+  top: 5rem;
+  right: 1.7rem;
+  z-index: 1;
 }
 
 .filter-button {
@@ -46,11 +45,13 @@
   color: #333;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 12px 16px;
+  min-width: 180px;
+  padding: 12px;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
@@ -71,7 +72,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  z-index: 200;
+  z-index: 1;
   min-width: 180px;
   margin-top: 8px;
   backdrop-filter: blur(10px);
@@ -99,9 +100,9 @@
 /* Status Legend - Top Left (without title) */
 .status-section {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 100;
+  top: 5rem;
+  left: 15.1rem;
+  z-index: 1;
   background-color: white;
   border-radius: 10px;
   padding: 16px 20px;
@@ -139,7 +140,7 @@
 /* Map Container - Full Screen */
 .map-container {
   flex: 1;
-  position: relative;
+
   overflow: hidden;
   background-color: #f8f9fa;
 }
@@ -680,7 +681,7 @@
 /* Zoom Controls */
 .zoom-controls {
   position: absolute;
-  bottom: 100px;
+  bottom: 50px;
   right: 20px;
   display: flex;
   flex-direction: column;
@@ -1008,11 +1009,11 @@ body.dark-mode .legend-item {
 }
 
 body.dark-mode .map-container {
-  background-color: #2a2a2a;
+  background-color: #121212;
 }
 
 body.dark-mode .map-content {
-  background-color: #2a2a2a;
+  background-color: #121212;
 }
 
 body.dark-mode .detail-panel {
@@ -1023,7 +1024,7 @@ body.dark-mode .detail-panel {
 }
 
 body.dark-mode .detail-panel-content {
-  background-color: #2a2a2a;
+  background-color: #121212;
 }
 
 body.dark-mode .more-info-header {
