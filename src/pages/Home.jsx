@@ -347,9 +347,9 @@ const Home = () => {
       <Sidebar />
       <div className="dashboard-content">
         <Header />
-        <div className="dashboard-main no-top-padding">
+        <div className="dashboard-main">
           <div className="recent-activities">
-            <div className="recent-activities-header">
+            {/* <div className="recent-activities-header">
               <div className="recent-activities-title">
                 <i className="fas fa-history green-icon"></i>
                 <h2>Recent Activities</h2>
@@ -368,9 +368,430 @@ const Home = () => {
                   <i className="fas fa-id-card"></i> Verify ID
                 </button>
               </div>
+            </div> */}
+            <div
+              className="bentobox-container"
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "8px",
+                display: "flex",
+              }}
+            >
+              <div
+                className="left-bento"
+                style={{
+                  flex: 1.5,
+                  margin: "10px",
+                  marginRight: "0px",
+                  marginLeft: "0px",
+                  borderRadius: "8px",
+
+                  display: "flex", // ➜ added
+                  flexDirection: "column", // ➜ added
+                }}
+              >
+                <div
+                  className="statcard-container"
+                  style={{
+                    flex: 1,
+                    margin: "0 20px 0px 20px",
+                    borderRadius: "8px",
+                    display: "flex", // ➜ horizontal layout
+                    gap: "15px", // ➜ space between cards
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#2A2A2A",
+                      borderRadius: "8px",
+                      display: "flex", // ➜ added
+                      flexDirection: "column", // ➜ added
+                    }}
+                  >
+                    <div
+                      className="stat-header"
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        margin: "10px 15px 5px 15px",
+                        alignItems: "center",
+                        alignContent: "center",
+                      }}
+                    >
+                      <i
+                        className="fa fa-xs fa-square green-icon"
+                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
+                      ></i>
+
+                      {/* Title */}
+                      <span style={{ fontSize: "12px" }}>VEHICLES PARKED</span>
+                    </div>
+                    <div
+                      className="stat-body"
+                      style={{
+                        flex: 4,
+                        backgroundColor: "#424242",
+                        margin: "0px 15px 15px 15px",
+                        borderRadius: "2px",
+                        display: "flex",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          padding: "10px",
+                          flex: 2,
+                          flexDirection: "column",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
+                          46{" "}
+                          {/* This should be the number of occupied parking in parking */}
+                        </span>
+                        <span style={{ fontSize: "12px" }}>
+                          Parking Occupied
+                        </span>
+                      </div>
+                      <div
+                        className="animation-container"
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#424242",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          overflow: "hidden",
+                          position: "relative",
+                        }}
+                      >
+                        <div className="scrolling-lines-1">
+                          <div className="line"></div>
+                          <div className="line"></div>
+                          <div className="line"></div>
+                        </div>
+
+                        <style>{`
+                          .scrolling-lines-1 {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 20px;
+                            position: absolute;
+                            top: 0;
+                            animation: scrollLines-1 3s linear infinite;
+                          }
+
+                          .line {
+                            width: 20px;      /* fixed width */
+                            height: 40px;     /* fixed height */
+                            background-color: red;
+                            border-radius: 2px;
+                          }
+
+                          @keyframes scrollLines-1 {
+                            0% {
+                              transform: translateY(-60px);
+                            }
+                            100% {
+                              transform: translateY(); /* scroll up by height + gap */
+                            }
+                          }
+                        `}</style>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* --- Stat Card 2 --- */}
+                  <div
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#2A2A2A",
+                      borderRadius: "8px",
+                      display: "flex", // ➜ added
+                      flexDirection: "column", // ➜ added
+                    }}
+                  >
+                    <div
+                      className="stat-header"
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        margin: "10px 15px 5px 15px",
+                        alignItems: "center",
+                        alignContent: "center",
+                      }}
+                    >
+                      <i
+                        className="fa fa-xs fa-square green-icon"
+                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
+                      ></i>
+
+                      {/* Title */}
+                      <span style={{ fontSize: "12px" }}>RESIDENT PARKING</span>
+                    </div>
+                    <div
+                      className="stat-body"
+                      style={{
+                        flex: 4,
+                        backgroundColor: "#424242",
+                        margin: "0px 15px 15px 15px",
+                        borderRadius: "2px",
+                        display: "flex",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          padding: "10px",
+                          flex: 2,
+                          flexDirection: "column",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
+                          46{" "}
+                          {/* This should be the number of available parking that is not free parking */}
+                        </span>
+                        <span style={{ fontSize: "12px" }}>
+                          Available Parking
+                        </span>
+                      </div>
+                      <div
+                        className="animation-container"
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#424242",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          overflow: "hidden",
+                          position: "relative",
+                        }}
+                      >
+                        <div className="scrolling-lines">
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#00BF63" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#00BF63" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#00BF63" }}
+                          ></div>
+                        </div>
+
+                        <style>{`
+                          .scrolling-lines {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 20px;
+                            position: absolute;
+                            top: 0;
+                            animation: scrollLines-2 3s linear infinite;
+                          }
+
+                          .line {
+                            width: 20px;      /* fixed width */
+                            height: 40px;     /* fixed height */
+                            background-color: green;
+                            border-radius: 2px;
+                          }
+
+                          @keyframes scrollLines-2 {
+                            0% {
+                              transform: translateY(0);
+                            }
+                            100% {
+                              transform: translateY(-60px); /* scroll up by height + gap */
+                            }
+                          }
+                        `}</style>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* --- Stat Card 3 --- */}
+                  <div
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#2A2A2A",
+                      borderRadius: "8px",
+                      display: "flex", // ➜ added
+                      flexDirection: "column", // ➜ added
+                    }}
+                  >
+                    <div
+                      className="stat-header"
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        margin: "10px 15px 5px 15px",
+                        alignItems: "center",
+                        alignContent: "center",
+                      }}
+                    >
+                      <i
+                        className="fa fa-xs fa-square green-icon"
+                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
+                      ></i>
+
+                      {/* Title */}
+                      <span style={{ fontSize: "12px" }}>VISITOR PARKING</span>
+                    </div>
+                    <div
+                      className="stat-body"
+                      style={{
+                        flex: 4,
+                        backgroundColor: "#424242",
+                        margin: "0px 15px 15px 15px",
+                        borderRadius: "2px",
+                        display: "flex",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          padding: "10px",
+                          flex: 2,
+                          flexDirection: "column",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
+                          46{" "}
+                          {/* This should be the number of available free parking */}
+                        </span>
+                        <span style={{ fontSize: "12px" }}>Free Parking</span>
+                      </div>
+                      <div
+                        className="animation-container"
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#424242",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          overflow: "hidden",
+                          position: "relative",
+                        }}
+                      >
+                        <div className="scrolling-lines-3">
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#FF751F" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#FF751F" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#FF751F" }}
+                          ></div>
+                        </div>
+
+                        <style>{`
+                          .scrolling-lines-3 {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 20px;
+                            position: absolute;
+                            top: 0;
+                            animation: scrollLines 3s linear infinite;
+                          }
+
+                          .line {
+                            width: 20px;      /* fixed width */
+                            height: 40px;     /* fixed height */
+                            background-color: red;
+                            border-radius: 2px;
+                          }
+
+                          @keyframes scrollLines {
+                            0% {
+                              transform: translateY(-60px);
+                            }
+                            100% {
+                              transform: translateY(); /* scroll up by height + gap */
+                            }
+                          }
+                        `}</style>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="visitorlogs-container"
+                  style={{
+                    backgroundColor: "#2A2A2A",
+                    flex: 2.5,
+                    margin: "20px",
+                    marginBottom: "2px",
+                    borderRadius: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    className="visitorlogs-header"
+                    style={{
+                      backgroundColor: "red",
+                      flex: 1,
+                      display: "flex",
+                    }}
+                  >
+                    {/*this should contain the icon and title for visitor logs and the button to log visitor - now i when button clicked i want to make a another modal for it that the user can choose if manual log or ocr, then just use the modals here for manual log and ocr to open*/}
+                  </div>
+                  <div
+                    className="visitorlogs-body"
+                    style={{ backgroundColor: "white", flex: 5.5 }}
+                  >
+                    {/*this will contain the visitor logs include only timestamp, name, plate number, parking slot, activity (entry or exit) - only list the recent 4 visitor logs for the table*/}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="right-bento"
+                style={{
+                  backgroundColor: "#2A2A2A",
+                  flex: 1,
+                  margin: "10px",
+                  marginLeft: "0px",
+                  borderRadius: "8px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  className="recentactivity-header"
+                  style={{
+                    backgroundColor: "red",
+                    flex: 1,
+                    display: "flex",
+                  }}
+                >
+                  {/*this should contain the icon, title, and the button for generating report, generate report the we generate report from report.jsx but i want the background always be white*/}
+                </div>
+                <div
+                  className="recentactivity-body"
+                  style={{ backgroundColor: "white", flex: 8 }}
+                >
+                  {/*this will contain the all logs include only timestamp, name, type(resident/visitor), activity (entry/exit) - only list the recent 9 logs for the table*/}
+                </div>
+              </div>
             </div>
 
-            {loading ? (
+            {/* {loading ? (
               <BouncingSpinner />
             ) : error ? (
               <div className="error">{error}</div>
@@ -417,7 +838,7 @@ const Home = () => {
                   })}
                 </tbody>
               </table>
-            )}
+            )} */}
           </div>
         </div>
       </div>

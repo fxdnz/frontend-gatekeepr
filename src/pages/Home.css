@@ -12,7 +12,7 @@
 
 .dashboard-main {
   /* Add top padding to account for fixed floating header (63px) */
-  padding: 63px 27px 27px 27px;
+  padding: 18px 27px 27px 27px;
 }
 
 .dashboard-cards {
