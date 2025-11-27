@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { connect } from "react-redux";
-import { reset_password_confirm } from "../actions/auth";
 import "./AuthPages.css";
 
-const ResetPasswordConfirm = ({ reset_password_confirm, isAuthenticated }) => {
+const ResetPasswordConfirm = ({ isAuthenticated }) => {
   const navigate = useNavigate();
   const { uid, token } = useParams();
   const [requestSent, setRequestSent] = useState(false);
@@ -91,8 +90,35 @@ const ResetPasswordConfirm = ({ reset_password_confirm, isAuthenticated }) => {
     }
 
     try {
-      await reset_password_confirm(uid, token, new_password, re_new_password);
-      setRequestSent(true);
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const body = JSON.stringify({
+        uid,
+        token,
+        new_password,
+        re_new_password,
+      });
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const response = await fetch(
+        `${API_BASE_URL}/auth/users/reset_password_confirm/`,
+        {
+          method: "POST",
+          headers: config.headers,
+          body,
+        }
+      );
+
+      if (response.ok) {
+        setRequestSent(true);
+      } else {
+        setError(
+          "Failed to reset password. The link may be invalid or expired."
+        );
+      }
     } catch (err) {
       setError("Failed to reset password. The link may be invalid or expired.");
     } finally {
@@ -257,6 +283,4 @@ const mapStateToProps = (state) => ({
   isAuthenticated: state.auth.isAuthenticated,
 });
 
-export default connect(mapStateToProps, { reset_password_confirm })(
-  ResetPasswordConfirm
-);
+export default connect(mapStateToProps, null)(ResetPasswordConfirm);

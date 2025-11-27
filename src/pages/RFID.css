@@ -1,4 +1,4 @@
-.residents-container {
+.rfid-page-container {
   margin-top: 63px;
   background-color: white;
   border-radius: 9px;
@@ -9,33 +9,33 @@
   flex-direction: column;
 }
 
-.residents-header {
+.rfid-page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.residents-title {
+.rfid-page-title {
   display: flex;
   align-items: center;
   gap: 9px;
 }
 
-.residents-actions {
+.rfid-page-actions {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
-.residents-container h2 {
+.rfid-page-container h2 {
   font-size: 18px;
   font-weight: 600;
   color: #333;
   margin: 0;
 }
 
-.register-button {
+.rfid-page-add-button {
   background-color: #00c07f;
   color: white;
   border: none;
@@ -50,26 +50,26 @@
   transition: background-color 0.2s;
 }
 
-.register-button:hover {
+.rfid-page-add-button:hover {
   background-color: #00a86b;
 }
 
 /* Search bar styles */
-.search-bar {
+.rfid-page-search-bar {
   position: relative;
   display: flex;
   align-items: center;
   margin-right: 5rem;
 }
 
-.search-bar i {
+.rfid-page-search-bar i {
   position: absolute;
   left: 12px;
   color: #666;
   font-size: 14px;
 }
 
-.search-input {
+.rfid-page-search-input {
   padding: 9px 12px 9px 36px;
   border: 1px solid #ddd;
   border-radius: 99px;
@@ -79,18 +79,19 @@
   transition: border-color 0.2s;
 }
 
-.search-input:focus {
+.rfid-page-search-input:focus {
   outline: none;
   border-color: #00c07f;
 }
 
-.residents-table {
+/* Table styles - EXACTLY like Residents page */
+.rfid-page-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.residents-table th {
+.rfid-page-table th {
   text-align: left;
   padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
@@ -98,26 +99,105 @@
   font-weight: 500;
 }
 
-.residents-table td {
+.rfid-page-table td {
   padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
   color: #333;
 }
 
-.loading,
-.error,
-.no-data {
+.rfid-page-loading,
+.rfid-page-error,
+.rfid-page-no-data {
   padding: 18px;
   text-align: center;
   color: #666;
 }
 
-.error {
+.rfid-page-error {
   color: #e53935;
 }
 
+/* Status and Type badges */
+.rfid-page-status-badge {
+  display: inline-block;
+  padding: 4.5px 9px;
+  border-radius: 4.5px;
+  font-weight: 500;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rfid-page-status-badge.active {
+  background-color: rgba(0, 192, 127, 0.15);
+  color: #00c07f;
+}
+
+.rfid-page-status-badge.inactive {
+  background-color: rgba(229, 57, 53, 0.15);
+  color: #e53935;
+}
+
+.rfid-page-type-badge {
+  display: inline-block;
+  padding: 4.5px 9px;
+  border-radius: 4.5px;
+  font-weight: 500;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rfid-page-type-badge.temporary {
+  background-color: rgba(255, 152, 0, 0.15);
+  color: #ff9800;
+}
+
+.rfid-page-type-badge.permanent {
+  background-color: rgba(0, 192, 127, 0.15);
+  color: #00c07f;
+}
+
+/* Owner display */
+.rfid-page-owner-display {
+  font-size: 12.6px;
+  line-height: 1.4;
+}
+
+.rfid-page-owner-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.rfid-page-owner-type {
+  color: #666;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+/* Action buttons cell */
+.rfid-page-action-buttons {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.rfid-page-update-dot-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #666;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  font-size: 16px;
+}
+
+.rfid-page-update-dot-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
 /* Modal styles */
-.modal-overlay {
+.rfid-page-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -131,7 +211,7 @@
   backdrop-filter: blur(4.5px);
 }
 
-.modal-content {
+.rfid-page-modal-content {
   background-color: white;
   border-radius: 9px;
   padding: 18px;
@@ -142,20 +222,20 @@
   overflow-y: auto;
 }
 
-.modal-header {
+.rfid-page-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.modal-title {
+.rfid-page-modal-title {
   display: flex;
   align-items: center;
   gap: 9px;
 }
 
-.modal-title h2 {
+.rfid-page-modal-title h2 {
   font-size: 16px;
   font-weight: 600;
   color: #00a86b;
@@ -163,7 +243,7 @@
   margin-bottom: 5px;
 }
 
-.close-button {
+.rfid-page-close-button {
   background: none;
   border: none;
   font-size: 16.2px;
@@ -171,7 +251,7 @@
   cursor: pointer;
 }
 
-.form-group label {
+.rfid-page-form-group label {
   display: block;
   margin-bottom: 7.2px;
   font-weight: 500;
@@ -179,7 +259,7 @@
   text-transform: none;
 }
 
-.form-group input {
+.rfid-page-form-group input {
   width: 100%;
   padding: 9px;
   border: 1px solid #ddd;
@@ -188,16 +268,12 @@
   box-sizing: border-box;
 }
 
-.green-icon {
+.rfid-page-green-icon {
   color: #00c07f;
   margin-left: 0.9rem;
 }
 
-.users-green {
-  color: #00c07f;
-}
-
-.form-error {
+.rfid-page-form-error {
   background-color: rgba(229, 57, 53, 0.1);
   color: #e53935;
   padding: 9px;
@@ -206,16 +282,7 @@
   border: 1px solid rgba(229, 57, 53, 0.2);
 }
 
-.form-error ul {
-  margin: 7.2px 0 0 0;
-  padding-left: 18px;
-}
-
-.form-error li {
-  margin-bottom: 3.6px;
-}
-
-.form-success {
+.rfid-page-form-success {
   background-color: rgba(0, 192, 127, 0.1);
   color: #00c07f;
   padding: 9px;
@@ -225,26 +292,26 @@
 }
 
 /* Delete confirmation modal */
-.delete-modal {
+.rfid-page-delete-modal {
   max-width: 400px;
 }
 
-.warning-icon {
+.rfid-page-warning-icon {
   color: #ff9800;
   font-size: 18px;
 }
 
-.delete-message {
+.rfid-page-delete-message {
   margin-bottom: 18px;
   line-height: 1.5;
   color: #333;
 }
 
-.delete-message p {
+.rfid-page-delete-message p {
   margin-bottom: 12px;
 }
 
-.delete-warning {
+.rfid-page-delete-warning {
   background-color: rgba(33, 150, 243, 0.1);
   border: 1px solid rgba(33, 150, 243, 0.2);
   border-radius: 4px;
@@ -254,24 +321,24 @@
   align-items: flex-start;
 }
 
-.delete-warning i {
+.rfid-page-delete-warning i {
   color: #2196f3;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
-.delete-warning span {
+.rfid-page-delete-warning span {
   font-size: 13px;
   line-height: 1.4;
   color: #1565c0;
 }
 
-.delete-actions {
+.rfid-page-delete-actions {
   display: flex;
   gap: 9px;
 }
 
-.delete-confirm-button {
+.rfid-page-delete-confirm-button {
   background-color: #e53935;
   color: white;
   border: none;
@@ -284,11 +351,11 @@
   transition: background-color 0.2s;
 }
 
-.delete-confirm-button:hover {
+.rfid-page-delete-confirm-button:hover {
   background-color: #c62828;
 }
 
-.delete-cancel-button {
+.rfid-page-delete-cancel-button {
   background-color: #f5f5f5;
   color: #333;
   border: none;
@@ -301,19 +368,19 @@
   transition: background-color 0.2s;
 }
 
-.delete-cancel-button:hover {
+.rfid-page-delete-cancel-button:hover {
   background-color: #e0e0e0;
 }
 
 /* Pagination controls */
-.pagination-controls {
+.rfid-page-pagination-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
 }
 
-.pagination-main {
+.rfid-page-pagination-main {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -321,14 +388,14 @@
   flex: 1;
 }
 
-.resident-count {
+.rfid-page-item-count {
   font-size: 12.6px;
   color: #666;
   font-weight: 500;
   margin-left: auto;
 }
 
-.pagination-button {
+.rfid-page-pagination-button {
   background-color: #00c07f;
   color: white;
   border: none;
@@ -345,45 +412,45 @@
   width: 6rem;
 }
 
-.pagination-button:hover:not(:disabled) {
+.rfid-page-pagination-button:hover:not(:disabled) {
   background-color: #00a86b;
 }
 
-.pagination-button:disabled {
+.rfid-page-pagination-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
 
-.pagination-info {
+.rfid-page-pagination-info {
   font-size: 12.6px;
   color: #666;
   font-weight: 500;
 }
 
 /* Modal Form Layout */
-.modal-form {
+.rfid-page-modal-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.form-row {
+.rfid-page-form-row {
   display: flex;
   gap: 18px;
 }
 
-.form-row .form-group {
+.rfid-page-form-row .rfid-page-form-group {
   flex: 1;
   margin-bottom: 0;
 }
 
-.form-group-full {
+.rfid-page-form-group-full {
   width: 100%;
   margin-bottom: 0;
 }
 
 /* Dropdown styling */
-.form-group select {
+.rfid-page-form-group select {
   width: 100%;
   padding: 9px;
   border: 1px solid #ddd;
@@ -399,19 +466,19 @@
   background-size: 8px 10px;
 }
 
-.form-group select:focus {
+.rfid-page-form-group select:focus {
   outline: none;
   border-color: #00c07f;
 }
 
 /* Input error styling */
-.error-input {
+.rfid-page-error-input {
   border-color: #e53935 !important;
   background-color: rgba(229, 57, 53, 0.05) !important;
 }
 
 /* Updated Form actions */
-.form-actions {
+.rfid-page-form-actions {
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -419,13 +486,13 @@
 }
 
 /* Form buttons row in modal */
-.form-buttons-row {
+.rfid-page-form-buttons-row {
   display: flex;
   gap: 12px;
   width: 100%;
 }
 
-.update-modal-button {
+.rfid-page-update-modal-button {
   background-color: #00a86a1f;
   color: #666;
   border: 1px solid #00a86b;
@@ -438,19 +505,19 @@
   transition: background-color 0.2s;
 }
 
-.update-modal-button:hover:not(:disabled) {
+.rfid-page-update-modal-button:hover:not(:disabled) {
   background-color: #00a86b;
   color: white;
   border-color: #00a86b;
 }
 
-.update-modal-button:disabled {
+.rfid-page-update-modal-button:disabled {
   background-color: #00a86b;
   cursor: not-allowed;
   color: #ccc;
 }
 
-.delete-modal-button {
+.rfid-page-delete-modal-button {
   background-color: #f5f5f5;
   color: #666;
   border: 1px solid #ddd;
@@ -463,186 +530,271 @@
   transition: all 0.2s;
 }
 
-.delete-modal-button:hover:not(:disabled) {
+.rfid-page-delete-modal-button:hover:not(:disabled) {
   background-color: #e53935;
   color: white;
   border-color: #e53935;
 }
 
-.delete-modal-button:disabled {
+.rfid-page-delete-modal-button:disabled {
   background-color: #f5f5f5;
   color: #ccc;
   cursor: not-allowed;
 }
 
-/* Three-dot update button in table */
-.update-dot-button {
-  background: none;
-  border: none;
+/* Table row hover and clickable styles - EXACTLY like Residents */
+.rfid-page-table tbody tr {
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.rfid-page-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.rfid-page-table tbody tr:active {
+  background-color: #e9ecef;
+}
+
+/* Enhanced table row styles */
+.rfid-page-clickable-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.rfid-page-clickable-row:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rfid-page-clickable-row:active {
+  background-color: #e9ecef;
+  transform: translateY(0);
+}
+
+/* Action buttons cell - prevent row click on button click */
+.rfid-page-action-buttons {
+  cursor: default;
+}
+
+.rfid-page-action-buttons .rfid-page-update-dot-button {
+  cursor: pointer;
+}
+
+/* Field Error Styles */
+.rfid-page-field-error {
+  color: #e53935;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 4px 8px;
+  background-color: rgba(229, 57, 53, 0.05);
+  border-radius: 3px;
+  border-left: 3px solid #e53935;
+}
+
+/* Login required styles */
+.rfid-page-login-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  text-align: center;
+}
+
+.rfid-page-login-button {
+  background-color: #00c07f;
+  color: white;
+  padding: 12px 24px;
+  text-decoration: none;
   border-radius: 4px;
-  color: #666;
+  margin-top: 16px;
+  display: inline-block;
   transition: background-color 0.2s;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  font-size: 16px;
 }
 
-.update-dot-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: flex-start;
+.rfid-page-login-button:hover {
+  background-color: #00a86b;
 }
 
 /* Dark mode styles */
-body.dark-mode .residents-container {
+body.dark-mode .rfid-page-container {
   background-color: #1e1e1e;
   color: #e0e0e0;
 }
 
-body.dark-mode .residents-container h2,
-body.dark-mode .modal-title h2 {
+body.dark-mode .rfid-page-container h2,
+body.dark-mode .rfid-page-modal-title h2 {
   color: #00a86b;
 }
 
-body.dark-mode .residents-table th {
+body.dark-mode .rfid-page-table th {
   color: #aaa;
   border-color: #333;
 }
 
-body.dark-mode .residents-table td {
+body.dark-mode .rfid-page-table td {
   color: #e0e0e0;
   border-color: #333;
 }
 
-body.dark-mode .modal-content {
-  background-color: #1e1e1e;
-}
-
-body.dark-mode .form-group label {
-  color: #e0e0e0;
-}
-
-body.dark-mode .form-group input {
+/* Dark mode hover effects */
+body.dark-mode .rfid-page-table tbody tr:hover {
   background-color: #2a2a2a;
-  border-color: #333;
-  color: #e0e0e0;
 }
 
-body.dark-mode .close-button {
-  color: #aaa;
-}
-
-body.dark-mode .loading,
-body.dark-mode .no-data {
-  color: #aaa;
-}
-
-body.dark-mode .error {
-  color: #f44336;
-}
-
-body.dark-mode .delete-message {
-  color: #e0e0e0;
-}
-
-body.dark-mode .delete-cancel-button {
+body.dark-mode .rfid-page-clickable-row:hover {
   background-color: #2a2a2a;
-  color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
-body.dark-mode .delete-cancel-button:hover {
+body.dark-mode .rfid-page-clickable-row:active {
   background-color: #333;
 }
 
-body.dark-mode .modal-content {
+body.dark-mode .rfid-page-update-dot-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .rfid-page-modal-content {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .rfid-page-form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .rfid-page-form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .rfid-page-close-button {
+  color: #aaa;
+}
+
+body.dark-mode .rfid-page-loading,
+body.dark-mode .rfid-page-no-data {
+  color: #aaa;
+}
+
+body.dark-mode .rfid-page-error {
+  color: #f44336;
+}
+
+body.dark-mode .rfid-page-delete-message {
+  color: #e0e0e0;
+}
+
+body.dark-mode .rfid-page-delete-cancel-button {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .rfid-page-delete-cancel-button:hover {
+  background-color: #333;
+}
+
+body.dark-mode .rfid-page-modal-content {
   background-color: #1e1e1e;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-body.dark-mode .pagination-controls {
+body.dark-mode .rfid-page-pagination-controls {
   border-top-color: #333;
 }
 
-body.dark-mode .pagination-info {
+body.dark-mode .rfid-page-pagination-info {
   color: #aaa;
 }
 
-body.dark-mode .pagination-button:disabled {
+body.dark-mode .rfid-page-pagination-button:disabled {
   background-color: #444;
 }
 
-body.dark-mode .form-group select {
+body.dark-mode .rfid-page-form-group select {
   background-color: #2a2a2a;
   border-color: #333;
   color: #e0e0e0;
   background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23aaa' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
 }
 
-body.dark-mode .form-group select:focus {
+body.dark-mode .rfid-page-form-group select:focus {
   border-color: #00c07f;
 }
 
-body.dark-mode .error-input {
+body.dark-mode .rfid-page-error-input {
   border-color: #e53935 !important;
   background-color: rgba(229, 57, 53, 0.1) !important;
 }
 
 /* Dark mode styles for new buttons */
-body.dark-mode .update-dot-button {
+body.dark-mode .rfid-page-update-dot-button {
   color: #aaa;
 }
 
-body.dark-mode .update-dot-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-body.dark-mode .update-modal-button {
+body.dark-mode .rfid-page-update-modal-button {
   background-color: #2a2a2a;
   color: #aaa;
   border-color: #444;
 }
 
-body.dark-mode .update-modal-button:hover:not(:disabled) {
+body.dark-mode .rfid-page-update-modal-button:hover:not(:disabled) {
   background-color: #00a86a3b;
   color: white;
   border-color: #00a86b;
 }
 
-body.dark-mode .delete-modal-button {
+body.dark-mode .rfid-page-delete-modal-button {
   background-color: #2a2a2a;
   color: #aaa;
   border-color: #444;
 }
 
-body.dark-mode .delete-modal-button:hover:not(:disabled) {
+body.dark-mode .rfid-page-delete-modal-button:hover:not(:disabled) {
   background-color: #e538354b;
   color: white;
   border-color: #e53935;
 }
 
-body.dark-mode .delete-warning {
+body.dark-mode .rfid-page-delete-warning {
   background-color: rgba(33, 150, 243, 0.1);
   border-color: rgba(33, 150, 243, 0.3);
 }
 
-body.dark-mode .delete-warning span {
+body.dark-mode .rfid-page-delete-warning span {
   color: #4fc3f7;
 }
 
 /* Dark mode styles for search */
-body.dark-mode .search-input {
+body.dark-mode .rfid-page-search-input {
   background-color: #2a2a2a;
   border-color: #333;
   color: #e0e0e0;
 }
 
-body.dark-mode .search-bar i {
+body.dark-mode .rfid-page-search-bar i {
   color: #aaa;
+}
+
+/* Dark mode for owner display */
+body.dark-mode .rfid-page-owner-name {
+  color: #e0e0e0;
+}
+
+body.dark-mode .rfid-page-owner-type {
+  color: #aaa;
+}
+
+/* Dark mode for field errors */
+body.dark-mode .rfid-page-field-error {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left-color: #f44336;
 }
 
 /* Spinner styles */
@@ -685,215 +837,72 @@ body.dark-mode .search-bar i {
   }
 }
 
-/* Login required styles */
-.login-required {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 50vh;
-  text-align: center;
-}
-
-.login-button {
-  background-color: #00c07f;
-  color: white;
-  padding: 12px 24px;
-  text-decoration: none;
-  border-radius: 4px;
-  margin-top: 16px;
-  display: inline-block;
-  transition: background-color 0.2s;
-}
-
-.login-button:hover {
-  background-color: #00a86b;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
-  .residents-actions {
+  .rfid-page-actions {
     flex-direction: column;
     gap: 9px;
     width: 100%;
   }
 
-  .search-bar {
+  .rfid-page-search-bar {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .rfid-page-search-input {
     width: 100%;
   }
 
-  .search-input {
-    width: 100%;
-  }
-
-  .register-button {
+  .rfid-page-add-button {
     width: 100%;
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .form-row {
+  .rfid-page-form-row {
     flex-direction: column;
     gap: 18px;
   }
 
-  .modal-content {
+  .rfid-page-modal-content {
     margin: 18px;
     max-width: calc(100% - 36px);
   }
 
-  .residents-header {
+  .rfid-page-header {
     flex-direction: column;
     gap: 13.5px;
     align-items: flex-start;
   }
 
-  .residents-actions {
+  .rfid-page-actions {
     width: 100%;
   }
 
-  .pagination-controls {
+  .rfid-page-pagination-controls {
     flex-direction: column;
     gap: 9px;
   }
 
-  .pagination-info {
+  .rfid-page-pagination-info {
     order: -1;
   }
 
-  .form-buttons-row {
+  .rfid-page-form-buttons-row {
     flex-direction: column;
     gap: 8px;
   }
 
-  .update-modal-button,
-  .delete-modal-button {
+  .rfid-page-update-modal-button,
+  .rfid-page-delete-modal-button {
     flex: 1;
   }
-}
 
-/* Ensure form-group styles apply to all form groups */
-.form-group label,
-.form-group-full label {
-  display: block;
-  margin-bottom: 7.2px;
-  font-weight: 500;
-  color: #333;
-  text-transform: none;
-}
-
-.form-group input,
-.form-group-full input,
-.form-group select,
-.form-group-full select {
-  width: 100%;
-  padding: 9px;
-  border: 1px solid #ddd;
-  border-radius: 4.5px;
-  font-size: 14px;
-  box-sizing: border-box;
-  background-color: white;
-}
-
-.form-group input:focus,
-.form-group-full input:focus,
-.form-group select:focus,
-.form-group-full select:focus {
-  outline: none;
-  border-color: #00c07f;
-}
-
-/* Remove margin-bottom for form-row children */
-.form-row .form-group,
-.form-row .form-group-full {
-  margin-bottom: 0;
-}
-
-/* Table row hover and clickable styles */
-.residents-table tbody tr {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.residents-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.residents-table tbody tr:active {
-  background-color: #e9ecef;
-}
-
-/* Action buttons cell - prevent row click on button click */
-.action-buttons {
-  cursor: default;
-}
-
-.action-buttons .update-dot-button {
-  cursor: pointer;
-}
-
-/* Dark mode styles for table rows */
-body.dark-mode .residents-table tbody tr:hover {
-  background-color: #2a2a2a;
-}
-
-body.dark-mode .residents-table tbody tr:active {
-  background-color: #333;
-}
-
-/* Enhanced table row styles */
-.clickable-row {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.clickable-row:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.clickable-row:active {
-  background-color: #e9ecef;
-  transform: translateY(0);
-}
-
-/* Dark mode styles for enhanced rows */
-body.dark-mode .clickable-row:hover {
-  background-color: #2a2a2a;
-  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .clickable-row:active {
-  background-color: #333;
-}
-
-/* Field Error Styles - Add this section */
-.field-error {
-  color: #e53935;
-  font-size: 12px;
-  margin-top: 5px;
-  padding: 4px 8px;
-  background-color: rgba(229, 57, 53, 0.05);
-  border-radius: 3px;
-  border-left: 3px solid #e53935;
-}
-
-.error-input {
-  border-color: #e53935 !important;
-  background-color: rgba(229, 57, 53, 0.05) !important;
-}
-
-/* Dark mode for field errors */
-body.dark-mode .field-error {
-  color: #f44336;
-  background-color: rgba(244, 67, 54, 0.1);
-  border-left-color: #f44336;
-}
-
-body.dark-mode .error-input {
-  border-color: #e53935 !important;
-  background-color: rgba(229, 57, 53, 0.1) !important;
+  .rfid-page-container {
+    padding: 18px;
+    height: auto;
+    min-height: 70vh;
+  }
 }

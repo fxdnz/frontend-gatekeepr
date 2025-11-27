@@ -106,6 +106,30 @@ const Sidebar = ({
         </Link>
 
         <Link
+          to="/create-users"
+          className={`sidebar-item ${
+            location.pathname === "/create-users" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-user-plus"></i>
+          </div>
+          <span>Create Users</span>
+        </Link>
+
+        <Link
+          to="/rfid"
+          className={`sidebar-item ${
+            location.pathname === "/rfid" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-microchip"></i>
+          </div>
+          <span>RFID</span>
+        </Link>
+
+        <Link
           to="/reports"
           className={`sidebar-item ${
             location.pathname === "/reports" ? "active" : ""

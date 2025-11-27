@@ -11,19 +11,19 @@ export const AUTH_ENDPOINTS = {
   VERIFY: `${API_BASE_URL}/auth/jwt/verify/`,
   REFRESH: `${API_BASE_URL}/auth/jwt/refresh/`,
   CREATE: `${API_BASE_URL}/auth/jwt/create/`,
-  ME: `${API_BASE_URL}/auth/users/me/`,
-  USERS: `${API_BASE_URL}/auth/users/`,
-  ACTIVATE: `${API_BASE_URL}/auth/users/activation/`,
+  ME: `${API_BASE_URL}/api/accounts/users/me/`,
+  USERS: `${API_BASE_URL}/api/accounts/users/`,
   RESET_PASSWORD: `${API_BASE_URL}/auth/users/reset_password/`,
   RESET_PASSWORD_CONFIRM: `${API_BASE_URL}/auth/users/reset_password_confirm/`,
 };
 
 // API Endpoints - Core
 export const API_ENDPOINTS = {
-  ACCESS_LOGS: `${API_BASE_URL}/api/v1/access-logs/`,
-  VISITORS: `${API_BASE_URL}/api/v1/visitors/`,
-  PARKING: `${API_BASE_URL}/api/v1/parking/`,
-  RESIDENTS: `${API_BASE_URL}/api/v1/residents/`,
+  ACCESS_LOGS: `${API_BASE_URL}/api/access-control/access-logs/`,
+  VISITORS: `${API_BASE_URL}/api/access-control/visitors/`,
+  PARKING: `${API_BASE_URL}/api/access-control/parking/`,
+  RESIDENTS: `${API_BASE_URL}/api/access-control/residents/`,
+  RFID: `${API_BASE_URL}/api/access-control/rfid/`,
 };
 
 // Utility function to get headers with authentication

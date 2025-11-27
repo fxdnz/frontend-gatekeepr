@@ -11,10 +11,12 @@ import Forbidden from "./pages/Forbidden";
 import NotFound from "./pages/NotFound";
 import Layout from "./hocs/Layout";
 import Parking from "./pages/Parking";
+import CreateUsers from "./pages/CreateUsers";
+import RFID from "./pages/RFID";
 
 import { Provider } from "react-redux";
 import store from "./store";
-import PrivateRoute from "./components/PrivateRoute"; // Add this line
+import PrivateRoute from "./components/PrivateRoute";
 import Residents from "./pages/Residents";
 
 const App = () => {
@@ -28,7 +30,7 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
-              path="/password/reset/confirm/:uid/:token"
+              path="/password-reset/confirm/:uid/:token"
               element={<ResetPasswordConfirm />}
             />
             <Route path="/activate/:uid/:token" element={<Activate />} />
@@ -64,6 +66,22 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <Residents />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/create-users"
+              element={
+                <PrivateRoute>
+                  <CreateUsers />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/rfid"
+              element={
+                <PrivateRoute>
+                  <RFID />
                 </PrivateRoute>
               }
             />

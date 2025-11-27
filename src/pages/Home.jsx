@@ -1,18 +1,16 @@
-/* eslint-disable no-unused-vars */
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { load_user } from "../actions/auth";
+import { API_ENDPOINTS, getAuthHeaders } from "../config/api";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Home.css";
-import BouncingSpinner from "../components/BouncingSpinner";
 import Webcam from "react-webcam";
-import { API_ENDPOINTS, getAuthHeaders } from "../config/api";
 
-// Hardcoded Gemini API key (NOT RECOMMENDED FOR PRODUCTION)
 const GEMINI_API_KEY = "AIzaSyAhFjdWTmnlrR-Zx86MrqKESnAcvSzjeGw";
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
@@ -20,31 +18,53 @@ const GEMINI_API_ENDPOINT =
 const Home = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const [logs, setLogs] = useState([]);
+
+  const [parkingData, setParkingData] = useState({
+    occupied: 0,
+    available: 0,
+    free: 0,
+  });
+
+  const [visitorLogs, setVisitorLogs] = useState([]);
+  const [recentActivityLogs, setRecentActivityLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [showLogVisitorChoiceModal, setShowLogVisitorChoiceModal] =
+    useState(false);
   const [showVisitorModal, setShowVisitorModal] = useState(false);
+  const [showOCRScanModal, setShowOCRScanModal] = useState(false);
+
   const [visitorForm, setVisitorForm] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     drivers_license: "",
     address: "",
     plate_number: "",
     purpose: "",
+    rfid: "",
+    parking_slot: "",
   });
+
   const [visitorError, setVisitorError] = useState("");
   const [visitorSuccess, setVisitorSuccess] = useState("");
   const [visitorLoading, setVisitorLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
-  const [showIDVerificationModal, setShowIDVerificationModal] = useState(false);
+  // OCR States
   const [licenseFile, setLicenseFile] = useState(null);
-  const [extractedData, setExtractedData] = useState({});
-  const [idForm, setIdForm] = useState({ plate_number: "", purpose: "" });
-  const [idError, setIdError] = useState("");
-  const [idSuccess, setIdSuccess] = useState("");
-  const [idLoading, setIdLoading] = useState(false);
   const [webcamActive, setWebcamActive] = useState(false);
   const webcamRef = useRef(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState("");
+  const [availableRfids, setAvailableRfids] = useState([]);
+  const [availableParkingSlots, setAvailableParkingSlots] = useState([]);
+
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode: "user",
+  };
 
   useEffect(() => {
     if (access && !user) {
@@ -52,96 +72,187 @@ const Home = () => {
     }
   }, [access, user, dispatch]);
 
+  const fetchData = async (token) => {
+    const headers = getAuthHeaders(token);
+    try {
+      const [parkingRes, logsRes, rfidsRes, parkingSlotsRes] =
+        await Promise.all([
+          axios.get(API_ENDPOINTS.PARKING, { headers }),
+          axios.get(API_ENDPOINTS.ACCESS_LOGS, { headers }),
+          axios.get(API_ENDPOINTS.RFID, { headers }),
+          axios.get(API_ENDPOINTS.PARKING, { headers }),
+        ]);
+
+      const parkingStats = parkingRes.data;
+      setParkingData({
+        occupied:
+          parkingStats.filter((s) => s.status === "OCCUPIED").length || 0,
+        available:
+          parkingStats.filter(
+            (s) => s.status === "AVAILABLE" && s.type !== "FREE"
+          ).length || 0,
+        free:
+          parkingStats.filter(
+            (s) => s.type === "FREE" && s.status === "AVAILABLE"
+          ).length || 0,
+      });
+
+      const allLogs = logsRes.data
+        .map((log) => ({
+          ...log,
+          plate_number: log.plate_number || "-",
+          parking_slot: log.parking?.slot_number || "-",
+          type: log.type || log.user_type || "RESIDENT",
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const visitors = allLogs.filter(
+        (log) => log.type?.toUpperCase() === "VISITOR"
+      );
+      setVisitorLogs(visitors.slice(0, 4));
+      setRecentActivityLogs(allLogs.slice(0, 7));
+
+      const availableRFIDs = rfidsRes.data.filter(
+        (rfid) =>
+          !rfid.issued_to &&
+          !rfid.temporary_owner &&
+          rfid.active &&
+          rfid.is_temporary
+      );
+      setAvailableRfids(availableRFIDs);
+
+      const availableSlots = parkingSlotsRes.data.filter(
+        (slot) =>
+          !slot.issued_to &&
+          !slot.temporary_owner &&
+          slot.status === "AVAILABLE" &&
+          slot.type === "FREE"
+      );
+      setAvailableParkingSlots(availableSlots);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError("Failed to fetch data");
+    }
+  };
+
   useEffect(() => {
-    const fetchAccessLogs = async () => {
+    const initializeData = async () => {
       if (!isAuthenticated) {
-        setError("Please login to view access logs");
+        setError("Please login to view dashboard");
         setLoading(false);
         return;
       }
 
       try {
-        const response = await axios.get(API_ENDPOINTS.ACCESS_LOGS, {
-          headers: getAuthHeaders(access),
-        });
-
-        const processedLogs = response.data
-          .map((log) => ({
-            ...log,
-            plate_number: log.plate_number || "-",
-            parking_slot: log.parking?.slot_number || "-",
-            type: log.type || log.user_type || "RESIDENT",
-          }))
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-        setLogs(processedLogs);
+        await fetchData(access);
       } catch (err) {
-        setError("Failed to fetch logs.");
+        console.error("Initialization error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAccessLogs();
+    initializeData();
+
     const pollingInterval = setInterval(() => {
       if (isAuthenticated && access) {
-        fetchAccessLogs();
+        fetchData(access);
       }
     }, 5000);
 
     return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
+  // Format input values
+  const formatInputValue = (name, value) => {
+    if (name === "first_name" || name === "last_name" || name === "purpose") {
+      // Capitalize first letter of each word
+      return value.replace(/\b\w/g, (char) => char.toUpperCase());
+    } else if (name === "plate_number" || name === "drivers_license") {
+      // Convert to uppercase
+      return value.toUpperCase();
+    }
+    return value;
+  };
+
   const handleVisitorInputChange = (e) => {
     const { name, value } = e.target;
-    setVisitorForm((prev) => ({ ...prev, [name]: value }));
+    const formattedValue = formatInputValue(name, value);
+
+    setVisitorForm((prev) => ({
+      ...prev,
+      [name]: formattedValue,
+    }));
+
+    // Clear field error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!visitorForm.first_name.trim())
+      errors.first_name = "First name is required";
+    if (!visitorForm.last_name.trim())
+      errors.last_name = "Last name is required";
+    if (!visitorForm.drivers_license.trim())
+      errors.drivers_license = "Driver's license is required";
+    if (!visitorForm.address.trim()) errors.address = "Address is required";
+    if (!visitorForm.purpose.trim()) errors.purpose = "Purpose is required";
+    // Add this line for plate number validation
+    if (!visitorForm.plate_number.trim())
+      errors.plate_number = "Plate number is required";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleVisitorSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setVisitorLoading(true);
     setVisitorError("");
     setVisitorSuccess("");
-    setVisitorLoading(true);
 
     try {
-      await axios.post(API_ENDPOINTS.VISITORS, visitorForm, {
-        headers: getAuthHeaders(access),
-      });
+      const headers = getAuthHeaders(access);
+      await axios.post(API_ENDPOINTS.VISITORS, visitorForm, { headers });
 
-      setVisitorSuccess("Visitor logged successfully.");
+      setVisitorSuccess("Visitor logged successfully!");
       setVisitorForm({
-        name: "",
+        first_name: "",
+        last_name: "",
         drivers_license: "",
         address: "",
         plate_number: "",
         purpose: "",
+        rfid: "",
+        parking_slot: "",
       });
+      setFormErrors({});
 
       setTimeout(() => {
         setShowVisitorModal(false);
         setVisitorSuccess("");
-      }, 2000);
-    } catch (error) {
-      setVisitorError("Failed to log visitor.");
+        fetchData(access);
+      }, 1500);
+    } catch (err) {
+      setVisitorError(err.response?.data?.detail || "Failed to log visitor");
     } finally {
       setVisitorLoading(false);
     }
   };
 
-  const formatTimeStamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return {
-      date: date.toISOString().split("T")[0],
-      time: date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }),
-    };
-  };
-
-  // ID Verification Functions
+  // OCR Functions
   const convertImageToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -152,8 +263,11 @@ const Home = () => {
   };
 
   const extractDriverLicenseInfo = async (base64Image, mimeType) => {
-    const prompt =
-      "Extract the following information from this Philippine driver's license image: last_name, first_name, middle_name, sex, home_address, license_number. Return the response in JSON format.";
+    const prompt = `
+    Extract the following information from this Philippine driver's license image: 
+    last_name, first_name, middle_name, sex, home_address, license_number. 
+    Return the response in JSON format. No extra text, no markdown.
+  `.trim();
 
     const payload = {
       contents: [
@@ -173,168 +287,138 @@ const Home = () => {
       ],
     };
 
-    const response = await fetch(GEMINI_API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": GEMINI_API_KEY,
-      },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch(GEMINI_API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": GEMINI_API_KEY,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Gemini API request failed: ${response.statusText}`);
-    }
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(
+          `Gemini API request failed: ${response.statusText} - ${errText}`
+        );
+      }
 
-    const data = await response.json();
-    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-      const textResponse = data.candidates[0].content.parts[0].text.trim();
-      const jsonMatch = textResponse.match(/```json\n([\s\S]*?)\n```/);
-      return jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(textResponse);
-    } else {
-      return { error: "No recognizable content from Gemini API." };
+      const data = await response.json();
+
+      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        const textResponse = data.candidates[0].content.parts[0].text.trim();
+        let cleanText = textResponse
+          .replace(/```json|```/g, "")
+          .replace(/^{|}$/g, "")
+          .trim();
+
+        if (!cleanText.startsWith("{")) {
+          const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            cleanText = jsonMatch[0];
+          }
+        }
+
+        const parsed = JSON.parse(cleanText);
+        return parsed;
+      } else {
+        throw new Error("No recognizable content from Gemini API.");
+      }
+    } catch (err) {
+      console.error("Gemini OCR failed:", err);
+      return { error: err.message };
     }
   };
 
   const handleProcessLicense = async () => {
     if (!licenseFile && !webcamActive) {
-      setIdError("Please select a driver's license image or enable webcam.");
+      setOcrError("Please select or capture a driver's license image.");
       return;
     }
 
-    setIdError("");
-    setIdSuccess("");
-    setIdLoading(true);
+    setOcrError("");
+    setOcrLoading(true);
 
     try {
       let base64Image, mimeType;
       if (licenseFile) {
-        if (!licenseFile.type.startsWith("image/")) {
-          throw new Error("Please upload an image file (e.g., JPG, PNG).");
-        }
         base64Image = await convertImageToBase64(licenseFile);
-        mimeType = licenseFile.type;
+        mimeType = licenseFile.type || "image/jpeg";
       } else if (webcamActive && webcamRef.current) {
         const screenshot = webcamRef.current.getScreenshot();
-        if (!screenshot) {
-          throw new Error("Failed to capture webcam image.");
-        }
+        if (!screenshot) throw new Error("Failed to capture image");
         base64Image = screenshot.split(",")[1];
         mimeType = "image/jpeg";
       }
 
       const extracted = await extractDriverLicenseInfo(base64Image, mimeType);
-      console.log("Extracted Data Set:", extracted); // Debug log
-      setExtractedData(extracted || {});
-      setIdForm({ plate_number: "", purpose: "" });
-    } catch (error) {
-      setIdError(`Failed to process license: ${error.message}`);
-    } finally {
-      setIdLoading(false);
-    }
-  };
 
-  const handleIdFormChange = (e) => {
-    const { name, value } = e.target;
-    setIdForm((prev) => ({ ...prev, [name]: value }));
-  };
+      if (extracted.error || !extracted.first_name) {
+        setOcrError(
+          extracted.error ||
+            "Could not read any information. Try a clearer photo."
+        );
+        return;
+      }
 
-  const handleIdSubmit = async (e) => {
-    e.preventDefault();
-    if (!idForm.purpose) {
-      setIdError("Please fill in the purpose field.");
-      return;
-    }
+      // Format the extracted data
+      const formattedData = {
+        first_name:
+          extracted.first_name
+            ?.trim()
+            .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+        last_name:
+          extracted.last_name
+            ?.trim()
+            .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+        drivers_license: extracted.license_number?.trim().toUpperCase() || "",
+        address: extracted.home_address?.trim() || "",
+      };
 
-    setIdError("");
-    setIdSuccess("");
-    setIdLoading(true);
+      setVisitorForm((prev) => ({
+        ...prev,
+        ...formattedData,
+      }));
 
-    if (!access) {
-      setIdError("Authentication token is missing. Please log in again.");
-      setIdLoading(false);
-      return;
-    }
-
-    const fullName =
-      extractedData && extractedData.first_name
-        ? [
-            extractedData.first_name,
-            extractedData.middle_name,
-            extractedData.last_name,
-          ]
-            .filter(Boolean)
-            .join(" ")
-        : "Unknown";
-
-    const visitorData = {
-      name: fullName,
-      drivers_license: extractedData?.license_number || "",
-      address: extractedData?.home_address || "",
-      plate_number: idForm.plate_number || "",
-      purpose: idForm.purpose,
-    };
-
-    let response;
-    try {
-      response = await axios.post(API_ENDPOINTS.VISITORS, visitorData, {
-        headers: getAuthHeaders(access),
-      });
-      setIdSuccess("Visitor registered successfully.");
+      setShowOCRScanModal(false);
+      setShowVisitorModal(true);
       setLicenseFile(null);
-      setExtractedData({});
-      setIdForm({ plate_number: "", purpose: "" });
-      setWebcamActive(false);
     } catch (error) {
-      setIdError(
-        `Failed to register visitor: ${error.message || "Unknown error"}`
-      );
+      console.error("OCR Error:", error);
+      setOcrError("OCR failed: " + error.message);
+    } finally {
+      setOcrLoading(false);
     }
-
-    if (response) {
-      setTimeout(() => {
-        setShowIDVerificationModal(false);
-        setIdSuccess("");
-      }, 2000);
-    }
-    setIdLoading(false);
-  };
-
-  const videoConstraints = {
-    width: 1280,
-    height: 720,
-    facingMode: "environment",
   };
 
   const toggleWebcam = useCallback(() => {
     if (webcamActive) {
-      // If webcam is currently active, turn it off
       setWebcamActive(false);
-      setIdError(""); // Clear any previous errors
+      setOcrError("");
     } else {
-      // If webcam is not active, turn it on
       setWebcamActive(true);
-      setIdError(""); // Clear any previous errors
-
-      // Optional: Test webcam access when turning it on
-      navigator.mediaDevices
-        .getUserMedia({ video: videoConstraints })
-        .then(() => {
-          // Webcam access successful - no need to do anything as setWebcamActive(true) already handled
-          console.log("Webcam access granted");
-        })
-        .catch((err) => {
-          console.error("Webcam access failed:", err);
-          setIdError("Failed to access webcam: " + err.message);
-          setWebcamActive(false); // Turn off webcam state if access fails
-        });
+      setOcrError("");
     }
-  }, [webcamActive, videoConstraints]);
+  }, [webcamActive]);
+
+  const formatTimeStamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return {
+      date: date.toISOString().split("T")[0],
+      time: date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }),
+    };
+  };
 
   if (!isAuthenticated) {
     return (
       <div className="login-required">
-        <h2>Please login to view the dashboard</h2>
+        <h2>Please login to view dashboard</h2>
         <a href="/login" className="login-button">
           Login
         </a>
@@ -347,231 +431,58 @@ const Home = () => {
       <Sidebar />
       <div className="dashboard-content">
         <Header />
-        <div className="dashboard-main">
+        <div className="dashboard-main no-top-padding">
           <div className="recent-activities">
-            {/* <div className="recent-activities-header">
-              <div className="recent-activities-title">
-                <i className="fas fa-history green-icon"></i>
-                <h2>Recent Activities</h2>
-              </div>
-              <div className="header-buttons">
-                <button
-                  className="register-button"
-                  onClick={() => setShowVisitorModal(true)}
-                >
-                  <i className="fas fa-user-plus"></i> Log Visitor
-                </button>
-                <button
-                  className="verify-id-button"
-                  onClick={() => setShowIDVerificationModal(true)}
-                >
-                  <i className="fas fa-id-card"></i> Verify ID
-                </button>
-              </div>
-            </div> */}
-            <div
-              className="bentobox-container"
-              style={{
-                width: "100%",
-                height: "100%",
-                borderRadius: "8px",
-                display: "flex",
-              }}
-            >
-              <div
-                className="left-bento"
-                style={{
-                  flex: 1.5,
-                  margin: "10px",
-                  marginRight: "0px",
-                  marginLeft: "0px",
-                  borderRadius: "8px",
-
-                  display: "flex", // ➜ added
-                  flexDirection: "column", // ➜ added
-                }}
-              >
-                <div
-                  className="statcard-container"
-                  style={{
-                    flex: 1,
-                    margin: "0 20px 0px 20px",
-                    borderRadius: "8px",
-                    display: "flex", // ➜ horizontal layout
-                    gap: "15px", // ➜ space between cards
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#2A2A2A",
-                      borderRadius: "8px",
-                      display: "flex", // ➜ added
-                      flexDirection: "column", // ➜ added
-                    }}
-                  >
-                    <div
-                      className="stat-header"
-                      style={{
-                        display: "flex",
-                        flex: 1,
-                        margin: "10px 15px 5px 15px",
-                        alignItems: "center",
-                        alignContent: "center",
-                      }}
-                    >
-                      <i
-                        className="fa fa-xs fa-square green-icon"
-                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
-                      ></i>
-
-                      {/* Title */}
-                      <span style={{ fontSize: "12px" }}>VEHICLES PARKED</span>
+            <div className="bentobox-container">
+              {/* Left Bento - Stat Cards */}
+              <div className="left-bento">
+                <div className="statcard-container">
+                  {/* Stat Card 1 - Vehicles Parked */}
+                  <div className="stat-card">
+                    <div className="stat-header">
+                      <i className="fa fa-xs fa-square green-icon"></i>
+                      <span>Vehicles Parked</span>
                     </div>
-                    <div
-                      className="stat-body"
-                      style={{
-                        flex: 4,
-                        backgroundColor: "#424242",
-                        margin: "0px 15px 15px 15px",
-                        borderRadius: "2px",
-                        display: "flex",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          padding: "10px",
-                          flex: 2,
-                          flexDirection: "column",
-                          marginLeft: "10px",
-                        }}
-                      >
-                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
-                          46{" "}
-                          {/* This should be the number of occupied parking in parking */}
+                    <div className="stat-body">
+                      <div className="stat-content">
+                        <span className="stat-number">
+                          {parkingData.occupied}
                         </span>
-                        <span style={{ fontSize: "12px" }}>
-                          Parking Occupied
-                        </span>
+                        <span className="stat-label">Parking Occupied</span>
                       </div>
-                      <div
-                        className="animation-container"
-                        style={{
-                          flex: 1,
-                          backgroundColor: "#424242",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          overflow: "hidden",
-                          position: "relative",
-                        }}
-                      >
+                      <div className="animation-container">
                         <div className="scrolling-lines-1">
-                          <div className="line"></div>
-                          <div className="line"></div>
-                          <div className="line"></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#ff3b30" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#ff3b30" }}
+                          ></div>
+                          <div
+                            className="line"
+                            style={{ backgroundColor: "#ff3b30" }}
+                          ></div>
                         </div>
-
-                        <style>{`
-                          .scrolling-lines-1 {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 20px;
-                            position: absolute;
-                            top: 0;
-                            animation: scrollLines-1 3s linear infinite;
-                          }
-
-                          .line {
-                            width: 20px;      /* fixed width */
-                            height: 40px;     /* fixed height */
-                            background-color: red;
-                            border-radius: 2px;
-                          }
-
-                          @keyframes scrollLines-1 {
-                            0% {
-                              transform: translateY(-60px);
-                            }
-                            100% {
-                              transform: translateY(); /* scroll up by height + gap */
-                            }
-                          }
-                        `}</style>
                       </div>
                     </div>
                   </div>
 
-                  {/* --- Stat Card 2 --- */}
-                  <div
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#2A2A2A",
-                      borderRadius: "8px",
-                      display: "flex", // ➜ added
-                      flexDirection: "column", // ➜ added
-                    }}
-                  >
-                    <div
-                      className="stat-header"
-                      style={{
-                        display: "flex",
-                        flex: 1,
-                        margin: "10px 15px 5px 15px",
-                        alignItems: "center",
-                        alignContent: "center",
-                      }}
-                    >
-                      <i
-                        className="fa fa-xs fa-square green-icon"
-                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
-                      ></i>
-
-                      {/* Title */}
-                      <span style={{ fontSize: "12px" }}>RESIDENT PARKING</span>
+                  {/* Stat Card 2 - Resident Parking */}
+                  <div className="stat-card">
+                    <div className="stat-header">
+                      <i className="fa fa-xs fa-square green-icon"></i>
+                      <span>Resident Parking</span>
                     </div>
-                    <div
-                      className="stat-body"
-                      style={{
-                        flex: 4,
-                        backgroundColor: "#424242",
-                        margin: "0px 15px 15px 15px",
-                        borderRadius: "2px",
-                        display: "flex",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          padding: "10px",
-                          flex: 2,
-                          flexDirection: "column",
-                          marginLeft: "10px",
-                        }}
-                      >
-                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
-                          46{" "}
-                          {/* This should be the number of available parking that is not free parking */}
+                    <div className="stat-body">
+                      <div className="stat-content">
+                        <span className="stat-number">
+                          {parkingData.available}
                         </span>
-                        <span style={{ fontSize: "12px" }}>
-                          Available Parking
-                        </span>
+                        <span className="stat-label">Available Parking</span>
                       </div>
-                      <div
-                        className="animation-container"
-                        style={{
-                          flex: 1,
-                          backgroundColor: "#424242",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          overflow: "hidden",
-                          position: "relative",
-                        }}
-                      >
+                      <div className="animation-container">
                         <div className="scrolling-lines">
                           <div
                             className="line"
@@ -586,103 +497,22 @@ const Home = () => {
                             style={{ backgroundColor: "#00BF63" }}
                           ></div>
                         </div>
-
-                        <style>{`
-                          .scrolling-lines {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 20px;
-                            position: absolute;
-                            top: 0;
-                            animation: scrollLines-2 3s linear infinite;
-                          }
-
-                          .line {
-                            width: 20px;      /* fixed width */
-                            height: 40px;     /* fixed height */
-                            background-color: green;
-                            border-radius: 2px;
-                          }
-
-                          @keyframes scrollLines-2 {
-                            0% {
-                              transform: translateY(0);
-                            }
-                            100% {
-                              transform: translateY(-60px); /* scroll up by height + gap */
-                            }
-                          }
-                        `}</style>
                       </div>
                     </div>
                   </div>
 
-                  {/* --- Stat Card 3 --- */}
-                  <div
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#2A2A2A",
-                      borderRadius: "8px",
-                      display: "flex", // ➜ added
-                      flexDirection: "column", // ➜ added
-                    }}
-                  >
-                    <div
-                      className="stat-header"
-                      style={{
-                        display: "flex",
-                        flex: 1,
-                        margin: "10px 15px 5px 15px",
-                        alignItems: "center",
-                        alignContent: "center",
-                      }}
-                    >
-                      <i
-                        className="fa fa-xs fa-square green-icon"
-                        style={{ margin: 0, padding: 0, paddingRight: "10px" }}
-                      ></i>
-
-                      {/* Title */}
-                      <span style={{ fontSize: "12px" }}>VISITOR PARKING</span>
+                  {/* Stat Card 3 - Visitor Parking */}
+                  <div className="stat-card">
+                    <div className="stat-header">
+                      <i className="fa fa-xs fa-square green-icon"></i>
+                      <span>Visitor Parking</span>
                     </div>
-                    <div
-                      className="stat-body"
-                      style={{
-                        flex: 4,
-                        backgroundColor: "#424242",
-                        margin: "0px 15px 15px 15px",
-                        borderRadius: "2px",
-                        display: "flex",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          padding: "10px",
-                          flex: 2,
-                          flexDirection: "column",
-                          marginLeft: "10px",
-                        }}
-                      >
-                        <span style={{ fontSize: "50px", fontWeight: "bold" }}>
-                          46{" "}
-                          {/* This should be the number of available free parking */}
-                        </span>
-                        <span style={{ fontSize: "12px" }}>Free Parking</span>
+                    <div className="stat-body">
+                      <div className="stat-content">
+                        <span className="stat-number">{parkingData.free}</span>
+                        <span className="stat-label">Free Parking</span>
                       </div>
-                      <div
-                        className="animation-container"
-                        style={{
-                          flex: 1,
-                          backgroundColor: "#424242",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          overflow: "hidden",
-                          position: "relative",
-                        }}
-                      >
+                      <div className="animation-container">
                         <div className="scrolling-lines-3">
                           <div
                             className="line"
@@ -697,460 +527,550 @@ const Home = () => {
                             style={{ backgroundColor: "#FF751F" }}
                           ></div>
                         </div>
-
-                        <style>{`
-                          .scrolling-lines-3 {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 20px;
-                            position: absolute;
-                            top: 0;
-                            animation: scrollLines 3s linear infinite;
-                          }
-
-                          .line {
-                            width: 20px;      /* fixed width */
-                            height: 40px;     /* fixed height */
-                            background-color: red;
-                            border-radius: 2px;
-                          }
-
-                          @keyframes scrollLines {
-                            0% {
-                              transform: translateY(-60px);
-                            }
-                            100% {
-                              transform: translateY(); /* scroll up by height + gap */
-                            }
-                          }
-                        `}</style>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div
-                  className="visitorlogs-container"
-                  style={{
-                    backgroundColor: "#2A2A2A",
-                    flex: 2.5,
-                    margin: "20px",
-                    marginBottom: "2px",
-                    borderRadius: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <div
-                    className="visitorlogs-header"
-                    style={{
-                      backgroundColor: "red",
-                      flex: 1,
-                      display: "flex",
-                    }}
-                  >
-                    {/*this should contain the icon and title for visitor logs and the button to log visitor - now i when button clicked i want to make a another modal for it that the user can choose if manual log or ocr, then just use the modals here for manual log and ocr to open*/}
+                <div className="visitors-section">
+                  <div className="visitorlogs-header">
+                    <div className="visitorlogs-title">
+                      <i className="fas fa-car green-icon"></i>
+                      <h3>Visitors</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowLogVisitorChoiceModal(true)}
+                      className="register-button-home"
+                    >
+                      <i className="fas fa-user-plus"></i> Log Visitor
+                    </button>
                   </div>
-                  <div
-                    className="visitorlogs-body"
-                    style={{ backgroundColor: "white", flex: 5.5 }}
-                  >
-                    {/*this will contain the visitor logs include only timestamp, name, plate number, parking slot, activity (entry or exit) - only list the recent 4 visitor logs for the table*/}
-                  </div>
+
+                  <table className="logs-table-dashboard">
+                    <thead>
+                      <tr>
+                        <th>Time stamp</th>
+                        <th>Name</th>
+                        <th>Plate Number</th>
+                        <th>Parking Slot</th>
+                        <th>Activity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visitorLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={5}>No visitor logs yet</td>
+                        </tr>
+                      ) : (
+                        visitorLogs.map((log) => {
+                          const { date, time } = formatTimeStamp(log.timestamp);
+                          return (
+                            <tr key={log.id}>
+                              <td>
+                                <div className="time-main">{date}</div>
+                                <div className="time-sub">{time}</div>
+                              </td>
+                              <td>{log.name || "N/A"}</td>
+                              <td>{log.plate_number}</td>
+                              <td>{log.parking_slot}</td>
+                              <td>
+                                <span
+                                  className={`activity-tag-dashboard ${
+                                    log.action?.toLowerCase() === "entry"
+                                      ? "entry"
+                                      : "exit"
+                                  }`}
+                                >
+                                  {log.action}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              <div
-                className="right-bento"
-                style={{
-                  backgroundColor: "#2A2A2A",
-                  flex: 1,
-                  margin: "10px",
-                  marginLeft: "0px",
-                  borderRadius: "8px",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div
-                  className="recentactivity-header"
-                  style={{
-                    backgroundColor: "red",
-                    flex: 1,
-                    display: "flex",
-                  }}
-                >
-                  {/*this should contain the icon, title, and the button for generating report, generate report the we generate report from report.jsx but i want the background always be white*/}
+              <div className="right-bento">
+                <div className="recentactivity-header">
+                  <div className="recentactivity-title">
+                    <i class="fas fa-history green-icon"></i>
+                    <h3>Recent Activities</h3>
+                  </div>
+                  <Link to="/reports" className="reports-button">
+                    <i className="fas fa-chart-bar"></i> Reports
+                  </Link>
                 </div>
-                <div
-                  className="recentactivity-body"
-                  style={{ backgroundColor: "white", flex: 8 }}
-                >
-                  {/*this will contain the all logs include only timestamp, name, type(resident/visitor), activity (entry/exit) - only list the recent 9 logs for the table*/}
-                </div>
+
+                <table className="logs-table-dashboard">
+                  <thead>
+                    <tr>
+                      <th>Time stamp</th>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentActivityLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={4}>No activities yet</td>
+                      </tr>
+                    ) : (
+                      recentActivityLogs.map((log) => {
+                        const { date, time } = formatTimeStamp(log.timestamp);
+                        return (
+                          <tr key={log.id}>
+                            <td>
+                              <div className="time-main-dashboard">{date}</div>
+                              <div className="time-sub">{time}</div>
+                            </td>
+                            <td>{log.name || "N/A"}</td>
+                            <td>{log.type}</td>
+                            <td>
+                              <span
+                                className={`activity-tag-dashboard ${
+                                  log.action?.toLowerCase() === "entry"
+                                    ? "entry"
+                                    : "exit"
+                                }`}
+                              >
+                                {log.action}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {/* {loading ? (
-              <BouncingSpinner />
-            ) : error ? (
-              <div className="error">{error}</div>
-            ) : logs.length === 0 ? (
-              <div className="no-data">No access logs found</div>
-            ) : (
-              <table className="activities-table">
-                <thead>
-                  <tr>
-                    <th>Time stamp</th>
-                    <th>Type</th>
-                    <th>Name</th>
-                    <th>Plate Number</th>
-                    <th>Activity</th>
-                    <th>Parking Slot</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => {
-                    const { date, time } = formatTimeStamp(log.timestamp);
-                    return (
-                      <tr key={log.id}>
-                        <td>
-                          <div className="time-main">{date}</div>
-                          <div className="time-sub">{time}</div>
-                        </td>
-                        <td>{log.type}</td>
-                        <td>{log.name || "N/A"}</td>
-                        <td>{log.plate_number}</td>
-                        <td>
-                          <span
-                            className={`activity-tag ${
-                              log.action?.toLowerCase() === "entry"
-                                ? "entry"
-                                : "exit"
-                            }`}
-                          >
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>{log.parking_slot}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )} */}
           </div>
         </div>
       </div>
 
+      {/* Log Visitor Choice Modal */}
+      {showLogVisitorChoiceModal && (
+        <div className="home-modal-overlay">
+          <div className="home-modal-content choice-modal">
+            <div className="home-modal-header">
+              <div className="home-modal-title">
+                <i className="fas fa-user-plus green-icon"></i>
+                <h2>Log New Visitor</h2>
+              </div>
+              <button
+                className="home-close-button"
+                onClick={() => setShowLogVisitorChoiceModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="choice-buttons-container">
+              <button
+                className="choice-button manual-choice"
+                onClick={() => {
+                  setShowLogVisitorChoiceModal(false);
+                  setShowVisitorModal(true);
+                }}
+              >
+                <i className="fas fa-keyboard"></i>
+                <span>Manual Entry</span>
+                <small>Type visitor details</small>
+              </button>
+
+              <button
+                className="choice-button ocr-choice"
+                onClick={() => {
+                  setShowLogVisitorChoiceModal(false);
+                  setShowOCRScanModal(true);
+                }}
+              >
+                <i className="fas fa-id-card"></i>
+                <span>OCR Scan</span>
+                <small>Scan Driver's License</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visitor Modal */}
       {showVisitorModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <div className="modal-title">
+        <div className="home-modal-overlay">
+          <div className="home-modal-content">
+            <div className="home-modal-header">
+              <div className="home-modal-title">
+                <button
+                  className="home-back-button"
+                  onClick={() => {
+                    setShowVisitorModal(false);
+                    setShowLogVisitorChoiceModal(true);
+                  }}
+                >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
                 <i className="fas fa-user-shield users-green"></i>
                 <h2>Log Visitor</h2>
               </div>
               <button
-                className="close-button"
+                className="home-close-button"
                 onClick={() => setShowVisitorModal(false)}
               >
-                <i className="fas fa-times"></i>
+                ×
               </button>
             </div>
+
             {visitorError && <div className="form-error">{visitorError}</div>}
             {visitorSuccess && (
               <div className="form-success">{visitorSuccess}</div>
             )}
-            <form onSubmit={handleVisitorSubmit}>
-              {[
-                "name",
-                "drivers_license",
-                "address",
-                "plate_number",
-                "purpose",
-              ].map((field) => (
-                <div className="form-group" key={field}>
-                  <label htmlFor={field}>
-                    {field
-                      .replace("_", " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </label>
+
+            <form onSubmit={handleVisitorSubmit} className="modal-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="first_name">First name</label>
                   <input
                     type="text"
-                    id={field}
-                    name={field}
-                    value={visitorForm[field]}
+                    id="first_name"
+                    name="first_name"
+                    value={visitorForm.first_name}
                     onChange={handleVisitorInputChange}
-                    placeholder={`Enter ${field.replace("_", " ")}`}
-                    required
+                    placeholder="First name"
+                    className={formErrors.first_name ? "error-input" : ""}
                   />
-                </div>
-              ))}
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  className="submit-button"
-                  disabled={visitorLoading}
-                >
-                  {visitorLoading ? (
-                    <div className="spinner white">
-                      <div className="bounce1"></div>
-                      <div className="bounce2"></div>
-                      <div className="bounce3"></div>
-                    </div>
-                  ) : (
-                    "Submit"
+                  {formErrors.first_name && (
+                    <div className="field-error">{formErrors.first_name}</div>
                   )}
-                </button>
-                <button
-                  type="button"
-                  className="clear-button"
-                  onClick={() =>
-                    setVisitorForm({
-                      name: "",
-                      drivers_license: "",
-                      address: "",
-                      plate_number: "",
-                      purpose: "",
-                    })
-                  }
-                  disabled={visitorLoading}
-                >
-                  Clear
-                </button>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="last_name">Last name</label>
+                  <input
+                    type="text"
+                    id="last_name"
+                    name="last_name"
+                    value={visitorForm.last_name}
+                    onChange={handleVisitorInputChange}
+                    placeholder="Last name"
+                    className={formErrors.last_name ? "error-input" : ""}
+                  />
+                  {formErrors.last_name && (
+                    <div className="field-error">{formErrors.last_name}</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="drivers_license">Drivers License</label>
+                  <input
+                    type="text"
+                    id="drivers_license"
+                    name="drivers_license"
+                    value={visitorForm.drivers_license}
+                    onChange={handleVisitorInputChange}
+                    placeholder="Driver's license number"
+                    className={formErrors.drivers_license ? "error-input" : ""}
+                  />
+                  {formErrors.drivers_license && (
+                    <div className="field-error">
+                      {formErrors.drivers_license}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="plate_number">Plate Number</label>
+                  <input
+                    type="text"
+                    id="plate_number"
+                    name="plate_number"
+                    value={visitorForm.plate_number}
+                    onChange={handleVisitorInputChange}
+                    placeholder="ABC 1234"
+                    className={formErrors.plate_number ? "error-input" : ""} // Add this
+                  />
+                  {/* Add this error display */}
+                  {formErrors.plate_number && (
+                    <div className="field-error">{formErrors.plate_number}</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group form-group-full">
+                <label htmlFor="address">Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={visitorForm.address}
+                  onChange={handleVisitorInputChange}
+                  placeholder="Home address"
+                  className={formErrors.address ? "error-input" : ""}
+                />
+                {formErrors.address && (
+                  <div className="field-error">{formErrors.address}</div>
+                )}
+              </div>
+
+              <div className="form-group form-group-full">
+                <label htmlFor="purpose">Purpose</label>
+                <input
+                  type="text"
+                  id="purpose"
+                  name="purpose"
+                  value={visitorForm.purpose}
+                  onChange={handleVisitorInputChange}
+                  placeholder="Purpose of visit"
+                  className={formErrors.purpose ? "error-input" : ""}
+                />
+                {formErrors.purpose && (
+                  <div className="field-error">{formErrors.purpose}</div>
+                )}
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="rfid">RFID</label>
+                  <select
+                    id="rfid"
+                    name="rfid"
+                    value={visitorForm.rfid}
+                    onChange={handleVisitorInputChange}
+                  >
+                    <option value="">No RFID</option>
+                    {availableRfids.map((rfid) => (
+                      <option key={rfid.id} value={rfid.id}>
+                        {rfid.uid} - Temporary
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="parking_slot">Parking Slot</label>
+                  <select
+                    id="parking_slot"
+                    name="parking_slot"
+                    value={visitorForm.parking_slot}
+                    onChange={handleVisitorInputChange}
+                  >
+                    <option value="">No parking slot</option>
+                    {availableParkingSlots.map((slot) => (
+                      <option key={slot.id} value={slot.id}>
+                        {slot.slot_number} ({slot.type}) - {slot.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <div className="form-buttons-row">
+                  <button
+                    type="submit"
+                    className="update-modal-button"
+                    disabled={visitorLoading}
+                  >
+                    {visitorLoading ? (
+                      <div className="spinner white">
+                        <div className="bounce1"></div>
+                        <div className="bounce2"></div>
+                        <div className="bounce3"></div>
+                      </div>
+                    ) : (
+                      "Submit"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="delete-modal-button"
+                    onClick={() => {
+                      setVisitorForm({
+                        first_name: "",
+                        last_name: "",
+                        drivers_license: "",
+                        address: "",
+                        plate_number: "",
+                        purpose: "",
+                        rfid: "",
+                        parking_slot: "",
+                      });
+                      setFormErrors({});
+                    }}
+                    disabled={visitorLoading}
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {showIDVerificationModal && (
-        <div className="modal-overlay">
-          <div className="modal-content id-verification-modal">
-            <div className="modal-header">
-              <div className="modal-title">
-                <i className="fas fa-id-card users-green"></i>
-                <h2>Verify ID</h2>
-              </div>
-              <button
-                className="close-button"
-                onClick={() => setShowIDVerificationModal(false)}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            {idError && <div className="form-error">{idError}</div>}
-            {idSuccess && <div className="form-success">{idSuccess}</div>}
-            <div className="id-verification-content">
-              <div className="form-group">
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-around",
-                    alignItems: "center",
-                    marginBottom: "10px",
+      {/* OCR Scan Modal */}
+      {/* OCR Scan Modal */}
+      {/* OCR Scan Modal */}
+      {showOCRScanModal && (
+        <div className="home-modal-overlay">
+          <div className="home-modal-content choice-modal">
+            <div className="home-modal-header">
+              <div className="home-modal-title">
+                <button
+                  className="home-back-button"
+                  onClick={() => {
+                    if (webcamActive) {
+                      // If camera is active, go back to photo selection
+                      setWebcamActive(false);
+                    } else if (licenseFile) {
+                      // If there's a captured photo, just remove it and stay in OCR modal
+                      setLicenseFile(null);
+                    } else {
+                      // If no photo and camera not active, go back to manual/OCR choice
+                      setShowOCRScanModal(false);
+                      setShowLogVisitorChoiceModal(true);
+                    }
                   }}
                 >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+                <i className="fas fa-id-card users-green"></i>
+                <h2>Scan Driver's License</h2>
+              </div>
+              <button
+                className="home-close-button"
+                onClick={() => {
+                  setShowOCRScanModal(false);
+                  setWebcamActive(false);
+                  setLicenseFile(null);
+                  setOcrError("");
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {ocrError && <div className="form-error">{ocrError}</div>}
+
+            <div className="choice-buttons-container">
+              {!licenseFile && !webcamActive && (
+                <>
                   <button
-                    type="button"
-                    className="register-button"
+                    className="choice-button gallery-choice"
                     onClick={() =>
                       document.getElementById("licenseFile").click()
                     }
-                    disabled={idLoading}
                   >
-                    <i className="fas fa-upload"></i> Choose File
+                    <i className="fas fa-images"></i>
+                    <span>Choose Photo</span>
+                    <small>Select from your device</small>
                   </button>
+
                   <button
-                    type="button"
-                    className="register-button"
-                    onClick={toggleWebcam}
-                    disabled={idLoading}
+                    className="choice-button camera-choice"
+                    onClick={() => setWebcamActive(true)}
                   >
-                    <i className="fas fa-camera"></i>{" "}
-                    {webcamActive ? "Stop Webcam" : "Start Webcam"}
+                    <i className="fas fa-camera"></i>
+                    <span>Use Camera</span>
+                    <small>Take a photo now</small>
                   </button>
-                </div>
-                <input
-                  type="file"
-                  id="licenseFile"
-                  accept="image/*"
-                  onChange={(e) => setLicenseFile(e.target.files[0])}
-                  className="hidden-file-input"
-                />
+                </>
+              )}
 
-                {/* Image Preview Section */}
-                {licenseFile && (
-                  <div className="image-preview-container">
-                    <div>
-                      <img
-                        src={
-                          URL.createObjectURL(licenseFile) || "/placeholder.svg"
-                        }
-                        alt="License Preview"
-                        className="image-preview"
-                      />
-                      <div className="image-info">
-                        <strong>File:</strong> {licenseFile.name} (
-                        {(licenseFile.size / 1024).toFixed(1)} KB)
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {licenseFile && (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      marginTop: "10px",
-                    }}
-                  >
+              {webcamActive && !licenseFile && (
+                <div className="camera-view-full">
+                  <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    className="webcam-feed-full"
+                  />
+                  <div className="small-action-buttons">
                     <button
-                      type="button"
-                      className="register-button process-license-button"
-                      onClick={handleProcessLicense}
-                      disabled={idLoading}
+                      className="small-action-button capture-button"
+                      onClick={() => {
+                        const shot = webcamRef.current?.getScreenshot();
+                        if (shot) {
+                          fetch(shot)
+                            .then((r) => r.blob())
+                            .then((blob) => {
+                              setLicenseFile(
+                                new File([blob], "capture.jpg", {
+                                  type: "image/jpeg",
+                                })
+                              );
+                              setWebcamActive(false);
+                            });
+                        }
+                      }}
                     >
-                      {idLoading ? (
+                      <i className="fas fa-camera"></i>
+                      Capture Photo
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {licenseFile && (
+                <div className="preview-container-full">
+                  <img
+                    src={URL.createObjectURL(licenseFile)}
+                    alt="License"
+                    className="license-preview-full"
+                  />
+                  <div className="small-action-buttons">
+                    <button
+                      className="small-action-button process-button"
+                      onClick={handleProcessLicense}
+                      disabled={ocrLoading}
+                    >
+                      {ocrLoading ? (
                         <div className="spinner white">
                           <div className="bounce1"></div>
                           <div className="bounce2"></div>
                           <div className="bounce3"></div>
                         </div>
                       ) : (
-                        "Process License"
+                        <>
+                          <i className="fas fa-magic"></i>
+                          Extract Information
+                        </>
                       )}
                     </button>
-                  </div>
-                )}
 
-                {webcamActive && (
-                  <div>
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={videoConstraints}
-                      style={{
-                        width: "100%",
-                        marginTop: "10px",
-                        border: "2px solid #ccc",
-                        borderRadius: "4px",
+                    <button
+                      className="small-action-button retake-button"
+                      onClick={() => {
+                        setLicenseFile(null);
+                        setOcrError("");
                       }}
-                    />
-                    <div className="capture-button-container">
-                      <button
-                        type="button"
-                        className="capture-process-button"
-                        onClick={handleProcessLicense}
-                        disabled={idLoading}
-                      >
-                        {idLoading ? (
-                          <span className="btn-loading">
-                            <span className="btn-spinner">
-                              <span className="bounce1"></span>
-                              <span className="bounce2"></span>
-                              <span className="bounce3"></span>
-                            </span>
-                            Capturing...
-                          </span>
-                        ) : (
-                          "Capture and Process"
-                        )}
-                      </button>
-                    </div>
+                    >
+                      <i className="fas fa-redo"></i>
+                      Retake Photo
+                    </button>
                   </div>
-                )}
-              </div>
-              {extractedData && Object.keys(extractedData).length > 0 && (
-                <div className="extracted-data-scrollable">
-                  <div className="extracted-data">
-                    <h3>ID Information</h3>
-                    {extractedData.error ? (
-                      <p className="error">{extractedData.error}</p>
-                    ) : (
-                      <>
-                        <p>
-                          <strong>Name:</strong>{" "}
-                          {[
-                            extractedData.first_name,
-                            extractedData.middle_name,
-                            extractedData.last_name,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        </p>
-                        <p>
-                          <strong>Driver's License:</strong>{" "}
-                          {extractedData.license_number || "N/A"}
-                        </p>
-                        <p>
-                          <strong>Address:</strong>{" "}
-                          {extractedData.home_address || "N/A"}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  <form onSubmit={handleIdSubmit}>
-                    <div className="form-group">
-                      <label htmlFor="plate_number">Plate Number</label>
-                      <input
-                        type="text"
-                        id="plate_number"
-                        name="plate_number"
-                        value={idForm.plate_number}
-                        onChange={handleIdFormChange}
-                        placeholder="e.g., ABC 1234"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="purpose">Purpose</label>
-                      <input
-                        type="text"
-                        id="purpose"
-                        name="purpose"
-                        value={idForm.purpose}
-                        onChange={handleIdFormChange}
-                        placeholder="e.g., Delivery, Meeting"
-                        required
-                      />
-                    </div>
-                    <div className="form-actions">
-                      <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={idLoading}
-                      >
-                        {idLoading ? (
-                          <div className="spinner white">
-                            <div className="bounce1"></div>
-                            <div className="bounce2"></div>
-                            <div className="bounce3"></div>
-                          </div>
-                        ) : (
-                          "Register Visitor"
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="clear-button"
-                        onClick={() => {
-                          setLicenseFile(null);
-                          setExtractedData({});
-                          setIdForm({ plate_number: "", purpose: "" });
-                          setWebcamActive(false);
-                        }}
-                        disabled={idLoading}
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </form>
                 </div>
               )}
             </div>
+
+            <input
+              type="file"
+              id="licenseFile"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  setLicenseFile(e.target.files[0]);
+                  setWebcamActive(false);
+                }
+              }}
+            />
           </div>
         </div>
       )}

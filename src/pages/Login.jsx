@@ -145,12 +145,7 @@ const Login = ({ login, isAuthenticated }) => {
               )}
             </button>
             <div className="create-account">
-              <p>
-                Doesn't have an account?{" "}
-                <Link to="/signup" className="create-account-link">
-                  Create account
-                </Link>
-              </p>
+              <p>Doesn't have an account? Contact your Administrator</p>
             </div>
           </form>
         </div>

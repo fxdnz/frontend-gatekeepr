@@ -1,0 +1,801 @@
+.createusers-container {
+  margin-top: 63px;
+  background-color: white;
+  border-radius: 9px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.createusers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.createusers-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.createusers-icon {
+  color: #00c07f;
+  font-size: 20px;
+}
+
+.createusers-container h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.createusers-add-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 13.5px;
+  font-size: 12.6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7.2px;
+  transition: background-color 0.2s;
+}
+
+.createusers-add-button:hover {
+  background-color: #00a86b;
+}
+
+.createusers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.createusers-table th {
+  text-align: left;
+  padding: 13.5px;
+  border-bottom: 1px solid #eaeaea;
+  color: #666;
+  font-weight: 500;
+  font-size: 12.6px;
+}
+
+.createusers-table td {
+  padding: 13.5px;
+  border-bottom: 1px solid #eaeaea;
+  color: #333;
+  font-size: 12.6px;
+}
+
+.createusers-status {
+  padding: 4.5px 9px;
+  border-radius: 4.5px;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.createusers-status.active {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+}
+
+.createusers-status.inactive {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+}
+
+.createusers-loading,
+.createusers-error,
+.createusers-no-data {
+  padding: 18px;
+  text-align: center;
+  color: #666;
+}
+
+.createusers-error {
+  color: #e53935;
+  background-color: rgba(229, 57, 53, 0.1);
+  border-radius: 4.5px;
+}
+
+/* Modal styles */
+.createusers-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4.5px);
+}
+
+.createusers-modal-content {
+  background-color: white;
+  border-radius: 9px;
+  padding: 18px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.createusers-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.createusers-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.createusers-modal-icon {
+  color: #00c07f;
+  font-size: 18px;
+}
+
+.createusers-modal-title h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.createusers-close-button {
+  background: none;
+  border: none;
+  font-size: 16.2px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.createusers-close-button:hover {
+  color: #333;
+}
+
+.createusers-form-group {
+  margin-bottom: 18px;
+}
+
+.createusers-form-group label {
+  display: block;
+  margin-bottom: 7.2px;
+  font-weight: 500;
+  color: #333;
+  font-size: 12.6px;
+}
+
+.createusers-form-group input,
+.createusers-form-group select {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
+  font-size: 12.6px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.createusers-form-group input:focus,
+.createusers-form-group select:focus {
+  outline: none;
+  border-color: #00c07f;
+  box-shadow: 0 0 0 2px rgba(0, 192, 127, 0.1);
+}
+
+/* Password label with generate button */
+.createusers-password-label-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7.2px;
+}
+
+.createusers-password-label-container label {
+  margin: 0;
+}
+
+.createusers-generate-button {
+  background: none;
+  border: 1px solid #00c07f;
+  color: #00c07f;
+  padding: 4px 9px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.createusers-generate-button:hover:not(:disabled) {
+  background-color: #00c07f;
+  color: white;
+}
+
+.createusers-generate-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.createusers-password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.createusers-password-input-container input {
+  width: 100%;
+  padding-right: 36px;
+}
+
+.createusers-password-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.createusers-password-toggle:hover:not(:disabled) {
+  color: #333;
+}
+
+.createusers-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Password strength indicator */
+.createusers-password-strength {
+  margin-top: 7.2px;
+  font-size: 11px;
+}
+
+.createusers-strength-text {
+  margin-bottom: 4px;
+}
+
+.createusers-password-strength-meter {
+  height: 4px;
+  border-radius: 2px;
+  background-color: #eee;
+  overflow: hidden;
+}
+
+.createusers-password-strength-meter div {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.createusers-password-strength.weak .createusers-strength-text {
+  color: #e53935;
+}
+
+.createusers-password-strength.medium .createusers-strength-text {
+  color: #ff9800;
+}
+
+.createusers-password-strength.strong .createusers-strength-text {
+  color: #00c07f;
+}
+
+.createusers-password-strength.weak .createusers-password-strength-meter div {
+  width: 33%;
+  background-color: #e53935;
+}
+
+.createusers-password-strength.medium .createusers-password-strength-meter div {
+  width: 66%;
+  background-color: #ff9800;
+}
+
+.createusers-password-strength.strong .createusers-password-strength-meter div {
+  width: 100%;
+  background-color: #00c07f;
+}
+
+.createusers-form-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 27px;
+}
+
+.createusers-submit-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 36px;
+}
+
+.createusers-submit-button:hover:not(:disabled) {
+  background-color: #00a86b;
+}
+
+.createusers-submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.createusers-clear-button {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 9px 16.2px;
+  font-size: 12.6px;
+  cursor: pointer;
+  transition: color 0.2s;
+  flex: 1;
+}
+
+.createusers-clear-button:hover:not(:disabled) {
+  text-decoration: underline;
+  color: #333;
+}
+
+.createusers-clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.createusers-form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  padding: 9px;
+  border-radius: 4.5px;
+  margin-bottom: 13.5px;
+  font-size: 12.6px;
+}
+
+.createusers-form-success {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+  padding: 9px;
+  border-radius: 4.5px;
+  margin-bottom: 13.5px;
+  font-size: 12.6px;
+}
+
+/* Action buttons */
+.createusers-action-buttons {
+  display: flex;
+  gap: 9px;
+  justify-content: flex-start;
+}
+
+/* Added edit button styling */
+.createusers-edit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14.4px;
+  color: #00c07f;
+  padding: 4.5px;
+  border-radius: 3.6px;
+  transition: background-color 0.2s;
+}
+
+.createusers-edit-button:hover {
+  background-color: rgba(0, 192, 127, 0.1);
+}
+
+.createusers-delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14.4px;
+  color: #e53935;
+  padding: 4.5px;
+  border-radius: 3.6px;
+  transition: background-color 0.2s;
+}
+
+.createusers-delete-button:hover {
+  background-color: rgba(229, 57, 53, 0.1);
+}
+
+/* Delete confirmation modal */
+.createusers-delete-modal {
+  max-width: 360px;
+}
+
+.createusers-warning-icon {
+  color: #ff9800;
+  font-size: 18px;
+}
+
+.createusers-delete-message {
+  margin-bottom: 18px;
+  line-height: 1.5;
+  color: #333;
+  font-size: 12.6px;
+}
+
+.createusers-delete-actions {
+  display: flex;
+  gap: 9px;
+}
+
+/* Added delete button styling for modal */
+.createusers-delete-button-modal {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 13.5px;
+  font-size: 12.6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4.5px;
+  transition: background-color 0.2s;
+  flex: 1;
+  justify-content: center;
+}
+
+.createusers-delete-button-modal:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+.createusers-delete-button-modal:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.createusers-delete-confirm-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 36px;
+}
+
+.createusers-delete-confirm-button:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+.createusers-delete-confirm-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.createusers-delete-cancel-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 0;
+  font-size: 14.4px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  transition: background-color 0.2s;
+}
+
+.createusers-delete-cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Pagination */
+.createusers-pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 13.5px;
+  margin-top: auto;
+  padding-top: 13.5px;
+}
+
+.createusers-pagination-button {
+  background-color: #00c07f;
+  color: white;
+  border: none;
+  border-radius: 4.5px;
+  padding: 9px 13.5px;
+  font-size: 12.6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7.2px;
+  transition: background-color 0.2s;
+}
+
+.createusers-pagination-button:hover:not(:disabled) {
+  background-color: #00a86b;
+}
+
+.createusers-pagination-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.createusers-pagination-info {
+  font-size: 12.6px;
+  color: #666;
+  font-weight: 500;
+}
+
+.createusers-login-required {
+  padding: 18px;
+  text-align: center;
+  color: #666;
+}
+
+.createusers-login-button {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 9px 18px;
+  background-color: #00c07f;
+  color: white;
+  text-decoration: none;
+  border-radius: 4.5px;
+  transition: background-color 0.2s;
+}
+
+.createusers-login-button:hover {
+  background-color: #00a86b;
+}
+
+.createusers-dashboard-container {
+  display: flex;
+}
+
+.createusers-dashboard-content {
+  flex: 1;
+  width: 100%;
+}
+
+.createusers-dashboard-main {
+  padding: 18px 27px 27px 243px;
+}
+
+.createusers-last-login {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.createusers-last-login-time {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Dark mode styles */
+body.dark-mode .createusers-container {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-container h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-table th {
+  color: #aaa;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-table td {
+  color: #e0e0e0;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-modal-content {
+  background-color: #1e1e1e;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .createusers-modal-title h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-form-group input,
+body.dark-mode .createusers-form-group select {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-form-group input:focus,
+body.dark-mode .createusers-form-group select:focus {
+  border-color: #00c07f;
+}
+
+body.dark-mode .createusers-close-button {
+  color: #aaa;
+}
+
+body.dark-mode .createusers-close-button:hover {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-delete-message {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-delete-cancel-button {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-delete-cancel-button:hover {
+  background-color: #333;
+}
+
+body.dark-mode .createusers-delete-button:hover {
+  background-color: rgba(229, 57, 53, 0.2);
+}
+
+/* Updated form actions to accommodate delete button */
+.createusers-form-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 27px;
+}
+
+body.dark-mode .createusers-edit-button:hover {
+  background-color: rgba(0, 192, 127, 0.2);
+}
+
+body.dark-mode .createusers-delete-button-modal:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+/* Add table wrapper styling */
+.createusers-table-wrapper {
+  overflow-x: auto;
+  flex: 1;
+  margin-bottom: 13.5px;
+}
+
+.createusers-users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.createusers-users-table th {
+  text-align: left;
+  padding: 13.5px;
+  border-bottom: 1px solid #eaeaea;
+  color: #666;
+  font-weight: 500;
+  font-size: 12.6px;
+  background-color: #f9f9f9;
+}
+
+.createusers-users-table td {
+  padding: 13.5px;
+  border-bottom: 1px solid #eaeaea;
+  color: #333;
+  font-size: 12.6px;
+}
+
+.createusers-users-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Add status badge styling */
+.createusers-status-badge {
+  display: inline-block;
+  padding: 4.5px 9px;
+  border-radius: 4.5px;
+  font-weight: 500;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.createusers-status-badge.active {
+  background-color: rgba(0, 192, 127, 0.15);
+  color: #00c07f;
+}
+
+.createusers-status-badge.inactive {
+  background-color: rgba(229, 57, 53, 0.15);
+  color: #e53935;
+}
+
+/* Add actions cell styling */
+.createusers-actions-cell {
+  display: flex;
+  gap: 9px;
+  justify-content: flex-start;
+}
+
+/* Add checkbox styling for is_active */
+.createusers-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+}
+
+.createusers-checkbox-group input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #00c07f;
+}
+
+.createusers-checkbox-label {
+  display: inline;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  font-size: 12.6px;
+}
+
+/* Dark mode updates for new elements */
+body.dark-mode .createusers-users-table th {
+  background-color: #252525;
+  color: #aaa;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-users-table td {
+  color: #e0e0e0;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-users-table tbody tr:hover {
+  background-color: #252525;
+}
+
+body.dark-mode .createusers-checkbox-label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-checkbox-group input[type="checkbox"] {
+  accent-color: #00c07f;
+}

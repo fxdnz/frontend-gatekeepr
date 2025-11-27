@@ -5,10 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    proxy: {
-      "/api": "https://gatekeepr-backend.onrender.com/", // Keep if you still need API proxying
-      "/auth": "https://gatekeepr-backend.onrender.com/", // Same here for auth if needed
-    },
+    port: 5173,
+    allowedHosts: ["gatekeepr.local"],
   },
   build: {
     // No need for base or outDir specific to Django

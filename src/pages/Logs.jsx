@@ -8,7 +8,7 @@ import { API_ENDPOINTS, AUTH_ENDPOINTS, getAuthHeaders } from "../config/api";
 import Sidebar from "../components/SideBar";
 import Header from "../components/Header";
 import "./Logs.css";
-import LoadingSpinner from "../components/BouncingSpinner";
+import BouncingSpinner from "../components/BouncingSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faListCheck } from "@fortawesome/free-solid-svg-icons";
 
@@ -21,8 +21,9 @@ const Logs = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [filteredLogs, setFilteredLogs] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // added pagination state
-  const logsPerPage = 7;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 6;
 
   useEffect(() => {
     if (access && !user) {
@@ -44,6 +45,7 @@ const Logs = () => {
         plate_number: log.plate_number || "-",
         parking_slot: log.parking?.slot_number || "-",
         type: log.type || log.user_type || "RESIDENT",
+        name: log.name || "N/A",
       }))
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -99,31 +101,66 @@ const Logs = () => {
 
     fetchData();
 
-    // Set up polling for real-time updates (every 10 seconds)
+    // Set up polling for real-time updates (every 5 seconds)
     const pollingInterval = setInterval(() => {
       if (isAuthenticated && access) {
         fetchData();
       }
-    }, 5000); // 5 seconds
+    }, 5000);
 
     return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
+  // Filter logs based on active tab and search term
   useEffect(() => {
-    if (activeTab === "all") {
-      setFilteredLogs(logs);
-    } else if (activeTab === "residents") {
-      setFilteredLogs(
-        logs.filter((log) => log.type === "RESIDENT" || log.type === "Resident")
+    let filtered = logs;
+
+    // Apply tab filter
+    if (activeTab === "residents") {
+      filtered = filtered.filter(
+        (log) => log.type === "RESIDENT" || log.type === "Resident"
       );
     } else if (activeTab === "visitors") {
-      setFilteredLogs(
-        logs.filter((log) => log.type === "VISITOR" || log.type === "Visitor")
+      filtered = filtered.filter(
+        (log) => log.type === "VISITOR" || log.type === "Visitor"
       );
     }
-    setCurrentPage(1); // reset to first page when filter changes
-  }, [activeTab, logs]);
 
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (log) =>
+          (log.name && log.name.toLowerCase().includes(searchLower)) ||
+          (log.plate_number &&
+            log.plate_number.toLowerCase().includes(searchLower)) ||
+          (log.type && log.type.toLowerCase().includes(searchLower)) ||
+          (log.action && log.action.toLowerCase().includes(searchLower)) ||
+          (log.parking_slot &&
+            log.parking_slot.toLowerCase().includes(searchLower))
+      );
+    }
+
+    setFilteredLogs(filtered);
+    setCurrentPage(1); // reset to first page when filter changes
+  }, [activeTab, logs, searchTerm]);
+
+  // Get counts for each tab
+  const getLogCounts = () => {
+    const allCount = logs.length;
+    const residentsCount = logs.filter(
+      (log) => log.type === "RESIDENT" || log.type === "Resident"
+    ).length;
+    const visitorsCount = logs.filter(
+      (log) => log.type === "VISITOR" || log.type === "Visitor"
+    ).length;
+
+    return { allCount, residentsCount, visitorsCount };
+  };
+
+  const { allCount, residentsCount, visitorsCount } = getLogCounts();
+
+  // Pagination
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
   const startIndex = (currentPage - 1) * logsPerPage;
   const endIndex = startIndex + logsPerPage;
@@ -154,6 +191,10 @@ const Logs = () => {
     };
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="login-required">
@@ -171,40 +212,69 @@ const Logs = () => {
       <div className="dashboard-content">
         <Header title="Logs" />
         <div className="dashboard-main no-top-padding">
-          <div className="detailed-activities">
-            <div className="detailed-activities-header">
-              <div className="detailed-title">
+          <div className="logs-container">
+            <div className="logs-header">
+              <div className="logs-title">
                 <FontAwesomeIcon icon={faListCheck} className="green-icon" />
-                <h2>Detailed Activities</h2>
+                <h2>Access Logs</h2>
               </div>
 
-              <div className="tabs">
-                {["all", "residents", "visitors"].map((tab) => (
-                  <button
-                    key={tab}
-                    className={`tab-button ${
-                      activeTab === tab ? "active" : ""
-                    }`}
-                    onClick={() => setActiveTab(tab)}
-                  >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                ))}
+              <div className="search-bar">
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                />
+                <i className="fas fa-search"></i>
+              </div>
+
+              <div className="logs-actions">
+                <div className="tabs">
+                  {[
+                    { key: "all", label: "All", count: allCount },
+                    {
+                      key: "residents",
+                      label: "Residents",
+                      count: residentsCount,
+                    },
+                    {
+                      key: "visitors",
+                      label: "Visitors",
+                      count: visitorsCount,
+                    },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      className={`tab-button ${
+                        activeTab === tab.key ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab(tab.key)}
+                    >
+                      {tab.label} ({tab.count})
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {loading ? (
-              <LoadingSpinner />
+              <BouncingSpinner />
             ) : error ? (
               <div className="error">{error}</div>
             ) : filteredLogs.length === 0 ? (
-              <div className="no-data">No logs found</div>
+              <div className="no-data">
+                {searchTerm
+                  ? "No logs found matching your search"
+                  : "No logs found"}
+              </div>
             ) : (
               <>
                 <table className="logs-table">
                   <thead>
                     <tr>
-                      <th>Time stamp</th>
+                      <th>Time Stamp</th>
                       <th>Type</th>
                       <th>Name</th>
                       <th>Plate Number</th>
@@ -216,13 +286,13 @@ const Logs = () => {
                     {paginatedLogs.map((log) => {
                       const { date, time } = formatTimeStamp(log.timestamp);
                       return (
-                        <tr key={log.id}>
+                        <tr key={log.id} className="clickable-row">
                           <td>
                             <div className="time-main">{date}</div>
                             <div className="time-sub">{time}</div>
                           </td>
                           <td>{log.type}</td>
-                          <td>{log.name || "N/A"}</td>
+                          <td>{log.name}</td>
                           <td>{log.plate_number}</td>
                           <td>
                             <span
@@ -241,24 +311,28 @@ const Logs = () => {
                     })}
                   </tbody>
                 </table>
+
                 <div className="pagination-controls">
-                  <button
-                    className="pagination-button"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </button>
-                  <span className="pagination-info">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    className="pagination-button"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
+                  <div className="pagination-main">
+                    <button
+                      className="pagination-button"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="pagination-info">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      className="pagination-button"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <span className="logs-count">{filteredLogs.length} logs</span>
                 </div>
               </>
             )}

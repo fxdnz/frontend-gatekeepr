@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
-import { reset_password } from "../actions/auth";
 import "./AuthPages.css";
 
-const ResetPassword = ({ reset_password, isAuthenticated }) => {
+const ResetPassword = ({ isAuthenticated }) => {
   const [requestSent, setRequestSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,8 +32,30 @@ const ResetPassword = ({ reset_password, isAuthenticated }) => {
     setError("");
 
     try {
-      await reset_password(email);
-      setRequestSent(true);
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const body = JSON.stringify({ email });
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const response = await fetch(
+        `${API_BASE_URL}/auth/users/reset_password/`,
+        {
+          method: "POST",
+          headers: config.headers,
+          body,
+        }
+      );
+
+      if (response.ok) {
+        setRequestSent(true);
+      } else {
+        setError(
+          "Failed to send password reset email. Please check your email and try again."
+        );
+      }
     } catch (err) {
       setError("Failed to send password reset email. Please try again.");
     } finally {
@@ -124,4 +145,4 @@ const mapStateToProps = (state) => ({
   isAuthenticated: state.auth.isAuthenticated,
 });
 
-export default connect(mapStateToProps, { reset_password })(ResetPassword);
+export default connect(mapStateToProps)(ResetPassword);
