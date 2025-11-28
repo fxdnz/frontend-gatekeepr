@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { connect } from "react-redux";
 import { login } from "../actions/auth";
@@ -14,23 +14,116 @@ const Login = ({ login, isAuthenticated }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [formError, setFormError] = useState("");
 
   const { email, password } = formData;
 
-  const onChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Check for dark mode on component mount and when mode changes
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.body.classList.contains("dark-mode");
+      setIsDarkMode(isDark);
+    };
+
+    // Initial check
+    checkDarkMode();
+
+    // Observe for dark mode changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+
+    // Clear field errors when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    if (formError) {
+      setFormError("");
+    }
+
+    setFormData({ ...formData, [name]: value });
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setFieldErrors({});
+    setFormError("");
+
+    // Frontend validation
+    const errors = {};
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    if (!formData.password.trim()) {
+      errors.password = "Password is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       await login(email, password);
+    } catch (err) {
+      // Handle login errors
+      if (err.response) {
+        const errorData = err.response.data;
+
+        // Handle different error response formats
+        if (typeof errorData === "object") {
+          // Check for field-specific errors
+          const newFieldErrors = {};
+          for (const field in errorData) {
+            if (Array.isArray(errorData[field])) {
+              newFieldErrors[field] = errorData[field][0];
+            } else {
+              newFieldErrors[field] = errorData[field];
+            }
+          }
+
+          if (Object.keys(newFieldErrors).length > 0) {
+            setFieldErrors(newFieldErrors);
+          } else {
+            // Handle non-field specific errors like wrong credentials
+            setFormError(
+              errorData.detail ||
+                errorData.message ||
+                "Invalid email or password. Please try again."
+            );
+          }
+        } else if (typeof errorData === "string") {
+          setFormError(errorData);
+        } else {
+          setFormError("Invalid email or password. Please try again.");
+        }
+      } else if (err.request) {
+        setFormError(
+          "No response from server. Please check your network connection."
+        );
+      } else {
+        setFormError("An unexpected error occurred. Please try again.");
+      }
     } finally {
-      // In case there's an error, we still want to stop loading
       setTimeout(() => {
         setIsLoading(false);
-      }, 1000); // Add a small delay to show loading state even if login is quick
+      }, 1000);
     }
   };
 
@@ -42,7 +135,6 @@ const Login = ({ login, isAuthenticated }) => {
 
   // Redirect if authenticated
   if (isAuthenticated) {
-    // Check if there's a redirect path in the location state
     const { state } = location;
     const redirectPath = state?.from || "/";
     return <Navigate to={redirectPath} />;
@@ -65,12 +157,27 @@ const Login = ({ login, isAuthenticated }) => {
       <div className="login-right">
         <div className="login-form-container">
           <div className="logo">
-            <img src="/gatekeepr-logo.png" alt="gatekeepr" />
+            <img
+              src={
+                isDarkMode
+                  ? "/gatekeepr-logo-white.png"
+                  : "/gatekeepr-logo-black.png"
+              }
+              alt="gatekeepr"
+            />
           </div>
 
           <h1 className="welcome-text">Welcome Back</h1>
 
           <form onSubmit={onSubmit}>
+            {/* Form-level error message - positioned above email */}
+            {formError && (
+              <div className="form-error">
+                <i className="fas fa-exclamation-circle"></i>
+                {formError}
+              </div>
+            )}
+
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -82,7 +189,14 @@ const Login = ({ login, isAuthenticated }) => {
                 placeholder="Enter your email"
                 required
                 disabled={isLoading}
+                className={fieldErrors.email ? "error-input" : ""}
               />
+              {fieldErrors.email && (
+                <div className="field-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {fieldErrors.email}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -97,6 +211,7 @@ const Login = ({ login, isAuthenticated }) => {
                   placeholder="Enter your password"
                   required
                   disabled={isLoading}
+                  className={fieldErrors.password ? "error-input" : ""}
                 />
                 <button
                   type="button"
@@ -111,6 +226,12 @@ const Login = ({ login, isAuthenticated }) => {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <div className="field-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {fieldErrors.password}
+                </div>
+              )}
             </div>
 
             <div className="form-footer">
@@ -130,12 +251,12 @@ const Login = ({ login, isAuthenticated }) => {
             </div>
 
             <button
-              className={`sign-in-button ${isLoading ? "loading" : ""}`}
+              className={`auth-button ${isLoading ? "loading" : ""}`}
               type="submit"
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="spinner">
+                <div className="spinner white">
                   <div className="bounce1"></div>
                   <div className="bounce2"></div>
                   <div className="bounce3"></div>

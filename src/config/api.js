@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
   PARKING: `${API_BASE_URL}/api/access-control/parking/`,
   RESIDENTS: `${API_BASE_URL}/api/access-control/residents/`,
   RFID: `${API_BASE_URL}/api/access-control/rfid/`,
+  USER_PROFILE: `${API_BASE_URL}/api/accounts/users/me/`, // Added for Settings page
+  VALIDATE_RFID: `${API_BASE_URL}/api/access-control/validate-rfid/`, // Added from API.txt
 };
 
 // Utility function to get headers with authentication

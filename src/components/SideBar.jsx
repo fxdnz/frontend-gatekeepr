@@ -58,7 +58,8 @@ const Sidebar = ({
 
   return (
     <div className="sidebar">
-      <div className="sidebar-header">
+      {/* Make the sidebar-header clickable and redirect to home */}
+      <Link to="/" className="sidebar-header">
         <img
           src={
             darkMode ? "/gatekeepr-logo-white.png" : "/gatekeepr-logo-black.png"
@@ -66,7 +67,7 @@ const Sidebar = ({
           alt="gatekeepr"
           className="sidebar-logo"
         />
-      </div>
+      </Link>
 
       <div className="sidebar-menu">
         <Link
@@ -103,6 +104,18 @@ const Sidebar = ({
             <i className="fas fa-users"></i>
           </div>
           <span>Residents</span>
+        </Link>
+
+        <Link
+          to="/visitors"
+          className={`sidebar-item ${
+            location.pathname === "/visitors" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-user-friends"></i>
+          </div>
+          <span>Visitors</span>
         </Link>
 
         <Link
@@ -150,6 +163,17 @@ const Sidebar = ({
             <i className="fas fa-car"></i>
           </div>
           <span>Parking</span>
+        </Link>
+        <Link
+          to="/settings"
+          className={`sidebar-item ${
+            location.pathname === "/settings" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-cog"></i>
+          </div>
+          <span>Settings</span>
         </Link>
       </div>
 

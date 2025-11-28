@@ -12,9 +12,29 @@ const ResetPassword = ({ isAuthenticated }) => {
   const [formData, setFormData] = useState({
     email: "",
   });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
   const { email } = formData;
+
+  // Check for dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.body.classList.contains("dark-mode");
+      setIsDarkMode(isDark);
+    };
+
+    checkDarkMode();
+
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -23,13 +43,40 @@ const ResetPassword = ({ isAuthenticated }) => {
     }
   }, [isAuthenticated, navigate]);
 
-  const onChange = (e) =>
+  const onChange = (e) => {
+    const { name, value } = e.target;
+
+    // Clear field errors when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    if (error) {
+      setError("");
+    }
+
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
+
+    // Frontend validation
+    const errors = {};
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setLoading(false);
+      return;
+    }
 
     try {
       const config = {
@@ -52,9 +99,29 @@ const ResetPassword = ({ isAuthenticated }) => {
       if (response.ok) {
         setRequestSent(true);
       } else {
-        setError(
-          "Failed to send password reset email. Please check your email and try again."
-        );
+        const errorData = await response.json();
+        if (typeof errorData === "object") {
+          const newFieldErrors = {};
+          for (const field in errorData) {
+            if (Array.isArray(errorData[field])) {
+              newFieldErrors[field] = errorData[field][0];
+            } else {
+              newFieldErrors[field] = errorData[field];
+            }
+          }
+          if (Object.keys(newFieldErrors).length > 0) {
+            setFieldErrors(newFieldErrors);
+          } else {
+            setError(
+              errorData.detail ||
+                "Failed to send password reset email. Please check your email and try again."
+            );
+          }
+        } else {
+          setError(
+            "Failed to send password reset email. Please check your email and try again."
+          );
+        }
       }
     } catch (err) {
       setError("Failed to send password reset email. Please try again.");
@@ -80,7 +147,14 @@ const ResetPassword = ({ isAuthenticated }) => {
       <div className="auth-right">
         <div className="auth-form-container">
           <div className="logo">
-            <img src="/gatekeepr-logo.png" alt="gatekeepr" />
+            <img
+              src={
+                isDarkMode
+                  ? "/gatekeepr-logo-white.png"
+                  : "/gatekeepr-logo-black.png"
+              }
+              alt="gatekeepr"
+            />
           </div>
 
           <h1 className="welcome-text">Reset Password</h1>
@@ -91,12 +165,18 @@ const ResetPassword = ({ isAuthenticated }) => {
 
           {requestSent && (
             <div className="auth-message auth-success">
+              <i className="fas fa-check-circle"></i>
               Password reset email has been sent. Please check your inbox and
               follow the instructions.
             </div>
           )}
 
-          {error && <div className="auth-message auth-error">{error}</div>}
+          {error && (
+            <div className="auth-message auth-error">
+              <i className="fas fa-exclamation-circle"></i>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={onSubmit}>
             <div className="form-group">
@@ -110,7 +190,14 @@ const ResetPassword = ({ isAuthenticated }) => {
                 placeholder="Enter your email"
                 required
                 disabled={loading || requestSent}
+                className={fieldErrors.email ? "error-input" : ""}
               />
+              {fieldErrors.email && (
+                <div className="field-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {fieldErrors.email}
+                </div>
+              )}
             </div>
 
             <button

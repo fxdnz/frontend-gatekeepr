@@ -14,12 +14,21 @@ const Parking = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [parkingSpaces, setParkingSpaces] = useState([]);
+  const [residents, setResidents] = useState([]);
+  const [visitors, setVisitors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  // Editable states
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [editingOccupant, setEditingOccupant] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [occupantOptions, setOccupantOptions] = useState([]);
+  const [loadingOccupants, setLoadingOccupants] = useState(false);
 
   // Map interaction states
   const [zoom, setZoom] = useState(1);
@@ -45,7 +54,7 @@ const Parking = () => {
       const response = await axios.get(API_ENDPOINTS.PARKING, {
         headers: getAuthHeaders(access),
       });
-      console.log("Parking spaces data:", response.data); // Debug log
+      console.log("Parking spaces data:", response.data);
       setParkingSpaces(response.data);
     } catch (err) {
       console.error("Error fetching parking spaces:", err);
@@ -59,11 +68,9 @@ const Parking = () => {
             type: "LOGIN_SUCCESS",
             payload: refreshResponse.data,
           });
-          // Retry fetching
           const retryResponse = await axios.get(API_ENDPOINTS.PARKING, {
             headers: getAuthHeaders(refreshResponse.data.access),
           });
-          console.log("Retry parking spaces data:", retryResponse.data); // Debug log
           setParkingSpaces(retryResponse.data);
         } catch (refreshError) {
           console.error("Token refresh failed:", refreshError);
@@ -78,15 +85,40 @@ const Parking = () => {
     }
   };
 
+  const fetchResidents = async () => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.RESIDENTS, {
+        headers: getAuthHeaders(access),
+      });
+      setResidents(response.data);
+    } catch (err) {
+      console.error("Error fetching residents:", err);
+    }
+  };
+
+  const fetchVisitors = async () => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.VISITORS, {
+        headers: getAuthHeaders(access),
+      });
+      setVisitors(response.data);
+    } catch (err) {
+      console.error("Error fetching visitors:", err);
+    }
+  };
+
   useEffect(() => {
     fetchParkingSpaces();
+    fetchResidents();
+    fetchVisitors();
 
-    // Set up polling for real-time updates
     const pollingInterval = setInterval(() => {
       if (isAuthenticated && access) {
         fetchParkingSpaces();
+        fetchResidents();
+        fetchVisitors();
       }
-    }, 10000); // 10 seconds
+    }, 10000);
 
     return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
@@ -115,24 +147,18 @@ const Parking = () => {
 
   const handleWheel = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent window scroll
+    e.stopPropagation();
 
-    // Get the mouse position relative to the viewport
     const rect = mapRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Calculate zoom delta
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const newZoom = Math.max(0.3, Math.min(2, zoom + delta));
 
-    // If zoom didn't change, don't update anything
     if (newZoom === zoom) return;
 
-    // Calculate the zoom factor
     const zoomFactor = newZoom / zoom;
-
-    // Calculate the new pan position to keep the mouse point stationary
     const newPanX = mouseX - (mouseX - pan.x) * zoomFactor;
     const newPanY = mouseY - (mouseY - pan.y) * zoomFactor;
 
@@ -179,14 +205,19 @@ const Parking = () => {
   const handleSpaceClick = (space) => {
     setSelectedSpace(space);
     setShowDetailPanel(true);
+    setEditingStatus(false);
+    setEditingOccupant(false);
+    setSearchQuery("");
   };
 
   const closeDetailPanel = () => {
     setShowDetailPanel(false);
     setSelectedSpace(null);
+    setEditingStatus(false);
+    setEditingOccupant(false);
+    setSearchQuery("");
   };
 
-  // Close panel when clicking overlay
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       closeDetailPanel();
@@ -201,7 +232,6 @@ const Parking = () => {
       filterType !== "occupied";
 
     if (isTypeFilter) {
-      // When type filter is active, show type colors for matching spaces, gray for others
       const spaceType = space.type?.toLowerCase();
       if (spaceType === filterType) {
         return `parking-space type-${spaceType}`;
@@ -209,7 +239,6 @@ const Parking = () => {
         return "parking-space filtered-out";
       }
     } else {
-      // When no type filter or status filter, show available/occupied colors
       if (filterType === "available" && space.status !== "AVAILABLE") {
         return "parking-space filtered-out";
       }
@@ -223,16 +252,11 @@ const Parking = () => {
     }
   };
 
-  // Generate CSS class name for positioning - handles CP01, CP02 format
+  // Generate CSS class name for positioning
   const getSpacePositionClass = (slotNumber) => {
     if (!slotNumber) return "";
 
-    // Convert slot number to CSS class format
-    // CP01 -> cp01, G01 -> g01, F01 -> f01
     const normalized = slotNumber.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-    console.log(`Slot: ${slotNumber} -> Class: space-${normalized}`); // Debug log
-
     return `space-${normalized}`;
   };
 
@@ -266,6 +290,159 @@ const Parking = () => {
     return typeMap[type.toLowerCase()] || "fas fa-car";
   };
 
+  // Status update handler
+  const handleStatusUpdate = async (newStatus) => {
+    if (!selectedSpace) return;
+
+    try {
+      const response = await axios.patch(
+        `${API_ENDPOINTS.PARKING}${selectedSpace.id}/`,
+        { status: newStatus },
+        { headers: getAuthHeaders(access) }
+      );
+
+      // Update local state
+      setParkingSpaces((prev) =>
+        prev.map((space) =>
+          space.id === selectedSpace.id
+            ? { ...space, status: newStatus }
+            : space
+        )
+      );
+
+      setSelectedSpace((prev) => ({ ...prev, status: newStatus }));
+      setEditingStatus(false);
+
+      console.log(`Status updated to ${newStatus}`);
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
+
+  // Occupant update handler
+  const handleOccupantUpdate = async (newOccupant) => {
+    if (!selectedSpace) return;
+
+    try {
+      let updateData = {};
+
+      if (newOccupant === "none") {
+        // Clear occupant
+        updateData = {
+          issued_to: null,
+          temporary_owner: null,
+          status: "AVAILABLE",
+        };
+      } else if (newOccupant.startsWith("resident_")) {
+        const residentId = newOccupant.replace("resident_", "");
+        const resident = residents.find((r) => r.id.toString() === residentId);
+        if (resident) {
+          updateData = {
+            issued_to: residentId,
+            temporary_owner: null,
+            status: "OCCUPIED",
+          };
+        }
+      } else if (newOccupant.startsWith("visitor_")) {
+        const visitorId = newOccupant.replace("visitor_", "");
+        const visitor = visitors.find((v) => v.id.toString() === visitorId);
+        if (visitor) {
+          updateData = {
+            temporary_owner: visitorId,
+            issued_to: null,
+            status: "OCCUPIED",
+          };
+        }
+      }
+
+      const response = await axios.patch(
+        `${API_ENDPOINTS.PARKING}${selectedSpace.id}/`,
+        updateData,
+        { headers: getAuthHeaders(access) }
+      );
+
+      // Update local state
+      const updatedSpace = { ...selectedSpace, ...updateData };
+
+      setParkingSpaces((prev) =>
+        prev.map((space) =>
+          space.id === selectedSpace.id ? updatedSpace : space
+        )
+      );
+
+      setSelectedSpace(updatedSpace);
+      setEditingOccupant(false);
+      setSearchQuery("");
+
+      console.log(`Occupant updated`);
+    } catch (err) {
+      console.error("Error updating occupant:", err);
+    }
+  };
+
+  // Prepare occupant options for dropdown
+  const prepareOccupantOptions = () => {
+    const options = [];
+
+    // Add "None" option
+    options.push({
+      id: "none",
+      name: "None (Available)",
+      type: "none",
+    });
+
+    // Add residents
+    residents.forEach((resident) => {
+      options.push({
+        id: `resident_${resident.id}`,
+        name: `${resident.first_name} ${resident.last_name} (Resident)`,
+        type: "resident",
+      });
+    });
+
+    // Add visitors
+    visitors.forEach((visitor) => {
+      options.push({
+        id: `visitor_${visitor.id}`,
+        name: `${visitor.first_name} ${visitor.last_name} (Visitor)`,
+        type: "visitor",
+      });
+    });
+
+    return options;
+  };
+
+  // Filter occupant options based on search query
+  const filteredOccupantOptions = () => {
+    const options = prepareOccupantOptions();
+    if (!searchQuery) return options;
+
+    return options.filter((option) =>
+      option.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
+  // Get current occupant name
+  const getCurrentOccupantName = () => {
+    if (!selectedSpace) return "N/A";
+
+    if (selectedSpace.issued_to) {
+      const resident = residents.find((r) => r.id === selectedSpace.issued_to);
+      return resident
+        ? `${resident.first_name} ${resident.last_name} (Resident)`
+        : "N/A";
+    } else if (selectedSpace.temporary_owner) {
+      const visitor = visitors.find(
+        (v) => v.id === selectedSpace.temporary_owner
+      );
+      return visitor
+        ? `${visitor.first_name} ${visitor.last_name} (Visitor)`
+        : "N/A";
+    } else {
+      return "None (Available)";
+    }
+  };
+
   const filterOptions = [
     { value: "all", label: "All", color: null, isStatus: true },
     {
@@ -281,6 +458,15 @@ const Parking = () => {
     { value: "free", label: "Free Parking", color: "#fd7e14", isStatus: false },
     { value: "open", label: "Open", color: "#7ed957", isStatus: false },
   ];
+
+  // Calculate parking statistics
+  const availableCount = parkingSpaces.filter(
+    (s) => s.status === "AVAILABLE"
+  ).length;
+  const occupiedCount = parkingSpaces.filter(
+    (s) => s.status === "OCCUPIED"
+  ).length;
+  const freeCount = parkingSpaces.filter((s) => s.type === "FREE").length;
 
   if (!isAuthenticated) {
     return (
@@ -325,36 +511,37 @@ const Parking = () => {
               </div>
             ) : (
               <>
-                {/* Status Legend - Top Left (without title) */}
+                {/* Status Section with Better Legend */}
                 <div className="status-section">
                   <div className="status-legend">
                     <div className="legend-item">
                       <div
                         className="legend-color"
                         style={{ backgroundColor: "#28a745" }}
-                      ></div>
-                      <span className="legend-text">
-                        AVAILABLE (
-                        {
-                          parkingSpaces.filter((s) => s.status === "AVAILABLE")
-                            .length
-                        }
-                        )
-                      </span>
+                      >
+                        <span
+                          className="legend-count"
+                          style={{ color: "white" }}
+                        >
+                          {availableCount}
+                        </span>
+                      </div>
+
+                      <span className="legend-text">AVAILABLE</span>
                     </div>
                     <div className="legend-item">
                       <div
                         className="legend-color"
                         style={{ backgroundColor: "#dc3545" }}
-                      ></div>
-                      <span className="legend-text">
-                        OCCUPIED (
-                        {
-                          parkingSpaces.filter((s) => s.status === "OCCUPIED")
-                            .length
-                        }
-                        )
-                      </span>
+                      >
+                        <span
+                          className="legend-count"
+                          style={{ color: "white" }}
+                        >
+                          {occupiedCount}
+                        </span>
+                      </div>
+                      <span className="legend-text">OCCUPIED</span>
                     </div>
                   </div>
                 </div>
@@ -432,9 +619,8 @@ const Parking = () => {
                           </div>
                         );
                       })}
-                      {/* lines */}
 
-                      {/* shapes */}
+                      {/* Building shapes */}
                       <div className="shape-rect building-a">Building A</div>
                       <div className="shape-rect building-b">Building B</div>
                       <div className="shape-rect building-c">Building C</div>
@@ -442,6 +628,7 @@ const Parking = () => {
                       <div className="shape-rect building-e">Building E</div>
                       <div className="shape-rect building-f">Building F</div>
                       <div className="shape-rect building-g">Building G</div>
+
                       {/* Debug info */}
                       {parkingSpaces.length === 0 && !loading && (
                         <div
@@ -451,9 +638,7 @@ const Parking = () => {
                             left: "50px",
                             color: "#666",
                           }}
-                        >
-                          No parking spaces found. Check API response.
-                        </div>
+                        ></div>
                       )}
                     </div>
                   </div>
@@ -508,14 +693,29 @@ const Parking = () => {
                   </div>
                 </div>
 
-                {/* Status Badge inside header */}
+                {/* Status Badge inside header - Editable */}
                 <div className="header-status-badge">
-                  <div
-                    className={`status-badge ${selectedSpace.status.toLowerCase()}`}
-                  >
-                    <div className="status-dot"></div>
-                    {selectedSpace.status}
-                  </div>
+                  {!editingStatus ? (
+                    <div
+                      className={`status-badge ${selectedSpace.status.toLowerCase()} editable`}
+                      onClick={() => setEditingStatus(true)}
+                    >
+                      <div className="status-dot"></div>
+                      {selectedSpace.status}
+                    </div>
+                  ) : (
+                    <div className="editable-select">
+                      <select
+                        value={selectedSpace.status}
+                        onChange={(e) => handleStatusUpdate(e.target.value)}
+                        onBlur={() => setEditingStatus(false)}
+                        autoFocus
+                      >
+                        <option value="AVAILABLE">AVAILABLE</option>
+                        <option value="OCCUPIED">OCCUPIED</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -548,7 +748,7 @@ const Parking = () => {
                       }}
                     >
                       <i className="fas fa-map-marker-alt"></i>
-                      {selectedSpace.location || "N/A"}
+                      {selectedSpace.location_display || "N/A"}
                     </div>
                   </div>
                 </div>
@@ -562,7 +762,9 @@ const Parking = () => {
                     }}
                   >
                     <i className="fas fa-user"></i>
-                    {selectedSpace.resident?.name || "N/A"}
+                    {selectedSpace.issued_to_details?.name ||
+                      selectedSpace.temporary_owner_details?.name ||
+                      "N/A"}
                   </div>
                 </div>
 
@@ -580,7 +782,9 @@ const Parking = () => {
                   <div className="info-text">
                     {selectedSpace.status === "OCCUPIED"
                       ? `This parking space is currently occupied by ${
-                          selectedSpace.resident?.name || "a resident"
+                          selectedSpace.issued_to_details?.name ||
+                          selectedSpace.temporary_owner_details?.name ||
+                          "a resident"
                         }. ${
                           selectedSpace.type
                             ? `This is designated as a ${selectedSpace.type.toLowerCase()} parking space.`

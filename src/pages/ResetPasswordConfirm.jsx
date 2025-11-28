@@ -18,8 +18,28 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const { new_password, re_new_password } = formData;
+
+  // Check for dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.body.classList.contains("dark-mode");
+      setIsDarkMode(isDark);
+    };
+
+    checkDarkMode();
+
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -40,6 +60,15 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
 
   const onChange = (e) => {
     const { name, value } = e.target;
+
+    // Clear field errors when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    if (error) {
+      setError("");
+    }
+
     setFormData({ ...formData, [name]: value });
 
     // Check password strength when new_password changes
@@ -82,9 +111,25 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
 
-    if (new_password !== re_new_password) {
-      setError("Passwords do not match");
+    // Frontend validation
+    const errors = {};
+
+    if (!formData.new_password.trim()) {
+      errors.new_password = "New password is required";
+    } else if (formData.new_password.length < 8) {
+      errors.new_password = "Password must be at least 8 characters";
+    }
+
+    if (!formData.re_new_password.trim()) {
+      errors.re_new_password = "Please confirm your password";
+    } else if (new_password !== re_new_password) {
+      errors.re_new_password = "Passwords do not match";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setLoading(false);
       return;
     }
@@ -115,9 +160,29 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
       if (response.ok) {
         setRequestSent(true);
       } else {
-        setError(
-          "Failed to reset password. The link may be invalid or expired."
-        );
+        const errorData = await response.json();
+        if (typeof errorData === "object") {
+          const newFieldErrors = {};
+          for (const field in errorData) {
+            if (Array.isArray(errorData[field])) {
+              newFieldErrors[field] = errorData[field][0];
+            } else {
+              newFieldErrors[field] = errorData[field];
+            }
+          }
+          if (Object.keys(newFieldErrors).length > 0) {
+            setFieldErrors(newFieldErrors);
+          } else {
+            setError(
+              errorData.detail ||
+                "Failed to reset password. The link may be invalid or expired."
+            );
+          }
+        } else {
+          setError(
+            "Failed to reset password. The link may be invalid or expired."
+          );
+        }
       }
     } catch (err) {
       setError("Failed to reset password. The link may be invalid or expired.");
@@ -154,7 +219,14 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
       <div className="auth-right">
         <div className="auth-form-container">
           <div className="logo">
-            <img src="/gatekeepr-logo.png" alt="gatekeepr" />
+            <img
+              src={
+                isDarkMode
+                  ? "/gatekeepr-logo-white.png"
+                  : "/gatekeepr-logo-black.png"
+              }
+              alt="gatekeepr"
+            />
           </div>
 
           <h1 className="welcome-text">Create New Password</h1>
@@ -164,12 +236,18 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
 
           {requestSent && (
             <div className="auth-message auth-success">
+              <i className="fas fa-check-circle"></i>
               Your password has been reset successfully! You will be redirected
               to the login page in a few seconds.
             </div>
           )}
 
-          {error && <div className="auth-message auth-error">{error}</div>}
+          {error && (
+            <div className="auth-message auth-error">
+              <i className="fas fa-exclamation-circle"></i>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={onSubmit}>
             <div className="form-group">
@@ -184,6 +262,7 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
                   placeholder="Enter your new password"
                   required
                   disabled={loading || requestSent}
+                  className={fieldErrors.new_password ? "error-input" : ""}
                 />
                 <button
                   type="button"
@@ -198,6 +277,12 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
                   )}
                 </button>
               </div>
+              {fieldErrors.new_password && (
+                <div className="field-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {fieldErrors.new_password}
+                </div>
+              )}
               {passwordStrength && (
                 <div className={`password-strength ${passwordStrength}`}>
                   <div className="strength-text">
@@ -224,6 +309,7 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
                   placeholder="Confirm your new password"
                   required
                   disabled={loading || requestSent}
+                  className={fieldErrors.re_new_password ? "error-input" : ""}
                 />
                 <button
                   type="button"
@@ -238,6 +324,12 @@ const ResetPasswordConfirm = ({ isAuthenticated }) => {
                   )}
                 </button>
               </div>
+              {fieldErrors.re_new_password && (
+                <div className="field-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {fieldErrors.re_new_password}
+                </div>
+              )}
               {re_new_password && (
                 <div
                   className={`password-match ${

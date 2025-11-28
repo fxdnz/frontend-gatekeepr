@@ -1,99 +1,197 @@
+/* Report.css - Updated with proper styling and dark mode */
 /* Basic styles that follow the existing dashboard look and table styles */
 .report-container {
   background-color: white;
   border-radius: 10px;
-  padding: 18px; /* 20px * 0.9 */
+  padding: 35px 50px 50px 50px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-top: 63px;
-  height: 80vh;
+  height: 73vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .report-container-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px; /* 20px * 0.9 */
+  margin-bottom: 18px;
 }
 
 .report-container h2 {
-  font-size: 18px; /* 20px * 0.9 */
+  font-size: 18px;
   font-weight: 600;
   color: #333;
   margin: 0;
 }
 
+/* Updated report filters with proper styling */
 .report-filters {
   display: flex;
   gap: 12px;
-  align-items: center;
-  margin: 16px 0;
+  align-items: flex-end;
+  margin-bottom: 20px;
 }
 
 .report-filters label {
   display: flex;
   flex-direction: column;
   font-size: 14px;
+  color: #333;
+  text-transform: none;
 }
 
 .report-filters input,
 .report-filters select {
-  padding: 8px 12px;
-  border: 2px solid #0b5e3b;
-  border-radius: 4px;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
   font-size: 14px;
   background: #fff;
   color: #111827;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .report-filters input:focus,
 .report-filters select:focus {
   outline: none;
-  border-color: #0b5e3b;
-  box-shadow: 0 0 0 3px rgba(11, 94, 59, 0.1);
+  border-color: #00c07f;
+  box-shadow: 0 0 0 2px rgba(0, 192, 127, 0.1);
 }
 
-/* Style the calendar icon color */
+/* Style the calendar inputs with normal text */
+.report-filters input[type="date"] {
+  position: relative;
+  text-transform: none;
+}
+
+/* Fix calendar picker indicator */
 .report-filters input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  filter: invert(0.3) sepia(0.8) hue-rotate(80deg) saturate(2);
+  opacity: 1;
 }
 
+/* Make select text normal case */
+.report-filters select {
+  text-transform: none;
+}
+
+/* Clear filter button styles */
+.clear-filters-btn {
+  padding: 9px 16px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  height: 40px;
+  width: 110px;
+  text-transform: none;
+}
+
+.clear-filters-btn:hover {
+  background: #e9ecef;
+  border-color: #ccc;
+  color: #333;
+}
+
+.clear-filters-btn:active {
+  background: #dee2e6;
+  transform: translateY(1px);
+}
+
+/* Full width table styling */
+.full-width-table {
+  width: 100%;
+}
+
+.full-width-table table {
+  width: 100%;
+  min-width: 800px;
+}
+
+.full-width-table th,
+.full-width-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dark mode styles */
 body.dark-mode .report-container {
   background-color: #1e1e1e;
   color: #e0e0e0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode .report-container h2 {
   color: #e0e0e0;
 }
-/* Dark mode for filter inputs */
+
+/* Dark mode for filter labels and inputs */
+body.dark-mode .report-filters label {
+  color: #e0e0e0;
+}
+
 body.dark-mode .report-filters input,
 body.dark-mode .report-filters select {
-  background: #0b1220;
+  background: #2a2a2a;
   color: #e6eef8;
-  border-color: #0b5e3b;
+  border-color: #444;
 }
 
 body.dark-mode .report-filters input:focus,
 body.dark-mode .report-filters select:focus {
-  border-color: #0b5e3b;
-  box-shadow: 0 0 0 3px rgba(11, 94, 59, 0.2);
+  border-color: #00c07f;
+  box-shadow: 0 0 0 2px rgba(0, 192, 127, 0.2);
+}
+
+body.dark-mode
+  .report-filters
+  input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+
+/* Dark mode for clear button */
+body.dark-mode .clear-filters-btn {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #a0aec0;
+}
+
+body.dark-mode .clear-filters-btn:hover {
+  background: #333;
+  border-color: #555;
+  color: #e6eef8;
+}
+
+body.dark-mode .clear-filters-btn:active {
+  background: #3a3a3a;
 }
 
 .report-preview {
   background: #fff;
-  padding: 20px;
+  padding: 35px 50px 50px 50px;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
 }
 
 .report-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  padding-top: 35px;
   border-bottom: 2px solid #e5e7eb;
 }
 
@@ -126,7 +224,7 @@ body.dark-mode .report-filters select:focus {
   gap: 4px;
   margin-top: 8px;
   font-size: 13px;
-  color: #666;
+  color: #090909;
 }
 
 .report-user-info-header p {
@@ -148,6 +246,8 @@ body.dark-mode .report-filters select:focus {
 .report-table thead th {
   background: #fafafa;
   text-align: left;
+  font-weight: 600;
+  color: #333;
 }
 
 .report-section {
@@ -158,9 +258,10 @@ body.dark-mode .report-filters select:focus {
   margin: 8px 0 6px;
   font-size: 16px;
   color: #0b5e3b;
+  font-weight: 600;
 }
 
-/* Dark mode support (match app dark theme) */
+/* Dark mode support */
 body.dark-mode .report-preview {
   background: #0b1220;
   color: #e6eef8;
@@ -184,6 +285,14 @@ body.dark-mode .section-title {
 
 body.dark-mode .report-meta {
   color: #a0aec0;
+}
+
+body.dark-mode .report-user-info-header {
+  color: #313131;
+}
+
+body.dark-mode .report-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Report preview is ALWAYS light (for PDF export) */
@@ -216,25 +325,12 @@ body.dark-mode .report-meta {
   text-align: center;
 }
 
-/* Add infinite scroll indicator styling for reports */
-.infinite-scroll-indicator {
-  text-align: center;
-  padding: 20px;
-  margin-top: 15px;
-  font-size: 13px;
-  color: #666;
-}
-
-body.dark-mode .infinite-scroll-indicator {
-  color: #aaa;
-}
-
-/* Make report-preview scrollable for infinite scroll */
-/* Add top padding for floating header */
+/* Make report-preview scrollable for y-axis only */
 #report-container {
   max-height: 700px;
   overflow-y: auto;
-  padding-top: 63px;
+  overflow-x: hidden;
+  padding-top: 0;
 }
 
 #report-container::-webkit-scrollbar {
@@ -272,9 +368,27 @@ body.dark-mode #report-container::-webkit-scrollbar-thumb:hover {
     flex-direction: column;
     align-items: stretch;
   }
-  .report-table td,
-  .report-table th {
-    font-size: 12px;
+
+  .report-container {
+    padding: 20px;
+    height: auto;
+  }
+
+  .report-preview {
+    padding: 0px;
+  }
+
+  .report-header,
+  .report-section {
+    padding: 0 20px;
+  }
+
+  .full-width-table {
+    overflow-x: auto;
+  }
+
+  .clear-filters-btn {
+    margin-top: 8px;
   }
 }
 

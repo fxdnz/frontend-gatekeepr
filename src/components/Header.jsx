@@ -2,11 +2,43 @@
 
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
+import { useLocation } from "react-router-dom";
 import "./Header.css";
 
 const Header = ({ user }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [darkMode, setDarkMode] = useState(false);
+
+  // Get current location for dynamic header title
+  const location = useLocation();
+
+  // Role mapping for proper formatting
+  const roleMap = {
+    system_admin: "System Administrator",
+    user_admin: "User Administrator",
+    personnel: "Personnel",
+  };
+
+  // Get formatted role
+  const formattedRole = user
+    ? roleMap[user.role] || "Unknown Role"
+    : "Not logged in";
+
+  // Page title mapping based on route
+  const pageTitleMap = {
+    "/": "Dashboard",
+    "/logs": "Logs",
+    "/residents": "Residents",
+    "/visitors": "Visitors",
+    "/create-users": "Create Users",
+    "/rfid": "RFID",
+    "/reports": "Reports",
+    "/parking": "Parking",
+    "/settings": "Settings",
+  };
+
+  // Get the current page title
+  const currentTitle = pageTitleMap[location.pathname] || "Page Not Found";
 
   // Update the time every second
   useEffect(() => {
@@ -19,11 +51,9 @@ const Header = ({ user }) => {
 
   // Update the useEffect for dark mode to load from localStorage
   useEffect(() => {
-    // Load dark mode preference from localStorage on initial load
     const savedDarkMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedDarkMode);
 
-    // Apply dark mode class to body when darkMode state changes
     if (darkMode) {
       document.body.classList.add("dark-mode");
     } else {
@@ -51,7 +81,7 @@ const Header = ({ user }) => {
     });
   };
 
-  // Update the toggleDarkMode function to save to localStorage
+  // Toggle dark mode and save preference to localStorage
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -60,7 +90,7 @@ const Header = ({ user }) => {
 
   return (
     <div className="header">
-      <div className="header-title">Dashboard</div>
+      <div className="header-title">{currentTitle}</div>
 
       <div className="header-datetime">
         <div className="date">{formatDate(currentTime)}</div>
@@ -84,7 +114,7 @@ const Header = ({ user }) => {
           </div>
           <div className="user-info">
             <div className="user-name">{user ? user.name : "Guest"}</div>
-            <div className="user-role">{user ? "Admin" : "Not logged in"}</div>
+            <div className="user-role">{formattedRole}</div>
           </div>
         </div>
       </div>

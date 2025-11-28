@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { load_user } from "../actions/auth";
@@ -16,33 +16,28 @@ const CreateUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "personnel",
     password: "",
-    is_active: true,
   });
-  const [editingUserId, setEditingUserId] = useState(null);
+
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [formLoading, setFormLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const [isEditMode, setIsEditMode] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
-
-  const ROLE_DISPLAY_NAMES = {
-    system_admin: "System Administrator",
-    user_admin: "User Administrator",
-    personnel: "Personnel",
-  };
+  const itemsPerPage = 8;
 
   useEffect(() => {
     if (access && !user) {
@@ -61,48 +56,46 @@ const CreateUsers = () => {
       const response = await axios.get(AUTH_ENDPOINTS.USERS, {
         headers: getAuthHeaders(access),
       });
-      setUsers(response.data);
+
+      // Sort by ID in descending order (latest first)
+      const sortedUsers = response.data.sort((a, b) => b.id - a.id);
+      setUsers(sortedUsers);
     } catch (err) {
       console.error("Error fetching users:", err);
-
-      if (err.response) {
-        if (err.response.status === 500) {
-          setError(
-            "Server error while fetching users. Please try again later."
-          );
-        } else if (err.response.status === 401) {
-          try {
-            const refreshResponse = await axios.post(AUTH_ENDPOINTS.REFRESH, {
-              refresh: localStorage.getItem("refresh"),
-            });
-
-            localStorage.setItem("access", refreshResponse.data.access);
-            dispatch({
-              type: "LOGIN_SUCCESS",
-              payload: refreshResponse.data,
-            });
-
-            const retryResponse = await axios.get(AUTH_ENDPOINTS.USERS, {
-              headers: getAuthHeaders(refreshResponse.data.access),
-            });
-            setUsers(retryResponse.data);
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
-            dispatch({ type: "LOGIN_FAIL" });
-            setError("Session expired. Please login again.");
-          }
-        } else {
-          setError(
-            err.response.data?.detail || "An unexpected error occurred."
-          );
-        }
-      } else if (err.request) {
-        setError("No response from server. Please check your network.");
-      } else {
-        setError("Error: " + err.message);
-      }
+      handleFetchError(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFetchError = async (err) => {
+    if (err.response?.status === 401) {
+      try {
+        const refreshResponse = await axios.post(AUTH_ENDPOINTS.REFRESH, {
+          refresh: localStorage.getItem("refresh"),
+        });
+
+        localStorage.setItem("access", refreshResponse.data.access);
+        dispatch({
+          type: "LOGIN_SUCCESS",
+          payload: refreshResponse.data,
+        });
+
+        const retryResponse = await axios.get(AUTH_ENDPOINTS.USERS, {
+          headers: getAuthHeaders(refreshResponse.data.access),
+        });
+        setUsers(retryResponse.data);
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+        dispatch({ type: "LOGIN_FAIL" });
+        setError("Session expired. Please login again.");
+      }
+    } else if (err.response) {
+      setError(err.response.data?.detail || "An unexpected error occurred.");
+    } else if (err.request) {
+      setError("No response from server. Please check your network.");
+    } else {
+      setError("Error: " + err.message);
     }
   };
 
@@ -117,6 +110,225 @@ const CreateUsers = () => {
 
     return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
+
+  // Filter users based on search term
+  const filteredUsers = users.filter((user) => {
+    if (!searchTerm.trim()) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (user.email && user.email.toLowerCase().includes(searchLower)) ||
+      (user.first_name &&
+        user.first_name.toLowerCase().includes(searchLower)) ||
+      (user.last_name && user.last_name.toLowerCase().includes(searchLower)) ||
+      (user.role && user.role.toLowerCase().includes(searchLower))
+    );
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleEditUser = (user) => {
+    setIsEditMode(true);
+    setCurrentUserId(user.id);
+    setFormData({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "personnel",
+      password: "",
+    });
+    setFieldErrors({});
+    setShowFormModal(true);
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`${AUTH_ENDPOINTS.USERS}${currentUserId}/`, {
+        headers: getAuthHeaders(access),
+      });
+
+      setUsers(users.filter((user) => user.id !== currentUserId));
+      setShowDeleteModal(false);
+      setShowFormModal(false);
+      setCurrentUserId(null);
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      alert("Failed to delete user. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+    setFieldErrors({});
+    setFormLoading(true);
+
+    // Frontend validation
+    const errors = {};
+
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    if (!isEditMode && !formData.password.trim()) {
+      errors.password = "Password is required for new users";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setFormLoading(false);
+      return;
+    }
+
+    // Capitalize first letter of first name and last name
+    const capitalizeFirstLetter = (str) => {
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    const formattedData = {
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      role: formData.role,
+    };
+
+    // Only include password if it's provided (for new users or when updating password)
+    if (formData.password.trim()) {
+      formattedData.password = formData.password;
+    }
+
+    try {
+      let response;
+
+      if (isEditMode) {
+        response = await axios.put(
+          `${AUTH_ENDPOINTS.USERS}${currentUserId}/`,
+          formattedData,
+          {
+            headers: getAuthHeaders(access),
+          }
+        );
+
+        setUsers(
+          users.map((user) =>
+            user.id === currentUserId ? response.data : user
+          )
+        );
+        setFormSuccess("User updated successfully!");
+      } else {
+        response = await axios.post(AUTH_ENDPOINTS.USERS, formattedData, {
+          headers: getAuthHeaders(access),
+        });
+
+        setUsers([...users, response.data]);
+        setFormSuccess("User created successfully!");
+      }
+
+      setTimeout(() => {
+        setShowFormModal(false);
+        setFormSuccess("");
+        setIsEditMode(false);
+        setCurrentUserId(null);
+        setFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+          role: "personnel",
+          password: "",
+        });
+        setFieldErrors({});
+      }, 2000);
+    } catch (err) {
+      console.error("Error saving user:", err);
+      if (err.response) {
+        const errorData = err.response.data;
+        if (typeof errorData === "object") {
+          const newFieldErrors = {};
+          for (const field in errorData) {
+            if (Array.isArray(errorData[field])) {
+              newFieldErrors[field] = errorData[field][0];
+            } else {
+              newFieldErrors[field] = errorData[field];
+            }
+          }
+          setFieldErrors(newFieldErrors);
+        } else {
+          setFormError(
+            err.response.data?.detail ||
+              "Failed to save user. Please try again."
+          );
+        }
+      } else if (err.request) {
+        setFormError("No response from server. Please check your network.");
+      } else {
+        setFormError("Error: " + err.message);
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleAddUser = () => {
+    setIsEditMode(false);
+    setCurrentUserId(null);
+    setFormData({
+      name: "",
+      email: "",
+      role: "personnel",
+      password: "",
+    });
+    setFieldErrors({});
+    setShowFormModal(true);
+  };
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   const generateRandomPassword = () => {
     const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -149,223 +361,12 @@ const CreateUsers = () => {
       ...formData,
       password: generatedPassword,
     });
-    checkPasswordStrength(generatedPassword);
-  };
-
-  const checkPasswordStrength = (password) => {
-    if (!password) {
-      setPasswordStrength("");
-      return;
-    }
-
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isLongEnough = password.length >= 8;
-
-    const score = [
-      hasLowerCase,
-      hasUpperCase,
-      hasNumbers,
-      hasSpecialChars,
-      isLongEnough,
-    ].filter(Boolean).length;
-
-    if (score <= 2) {
-      setPasswordStrength("weak");
-    } else if (score <= 4) {
-      setPasswordStrength("medium");
-    } else {
-      setPasswordStrength("strong");
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    if (name === "password") {
-      checkPasswordStrength(value);
-    }
-  };
-
-  const handleAddUser = () => {
-    setFormData({
-      name: "",
-      email: "",
-      role: "personnel",
-      password: "",
-      is_active: true,
-    });
-    setEditingUserId(null);
-    setFormError("");
-    setFormSuccess("");
-    setPasswordStrength("");
-    setShowPassword(false);
-    setShowModal(true);
-  };
-
-  const handleEditClick = (userToEdit) => {
-    setEditingUserId(userToEdit.id);
-    setFormData({
-      name: userToEdit.name || "",
-      email: userToEdit.email || "",
-      role: userToEdit.role || "personnel",
-      password: "",
-      is_active: userToEdit.is_active || true,
-    });
-    setFormError("");
-    setFormSuccess("");
-    setPasswordStrength("");
-    setShowPassword(false);
-    setShowEditModal(true);
-  };
-
-  const handleDeleteClick = (user) => {
-    setCurrentUserId(user.id);
-    setShowDeleteConfirmModal(true);
-  };
-
-  const handleDeleteUser = async () => {
-    setDeleteLoading(true);
-    try {
-      await axios.delete(`${AUTH_ENDPOINTS.USERS}${currentUserId}/`, {
-        headers: getAuthHeaders(access),
-      });
-
-      setUsers(users.filter((user) => user.id !== currentUserId));
-      setShowDeleteConfirmModal(false);
-      setShowEditModal(false);
-      setCurrentUserId(null);
-    } catch (err) {
-      console.error("Error deleting user:", err);
-      alert("Failed to delete user. Please try again.");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormError("");
-    setFormSuccess("");
-    setFormLoading(true);
-
-    try {
-      const payload = {
-        name: formData.name,
-        role: formData.role,
-        is_active: formData.is_active,
-      };
-
-      if (formData.password) {
-        payload.password = formData.password;
-      }
-
-      let response;
-      if (editingUserId) {
-        response = await axios.put(
-          `${AUTH_ENDPOINTS.USERS}${editingUserId}/`,
-          payload,
-          {
-            headers: getAuthHeaders(access),
-          }
-        );
-        setUsers(
-          users.map((user) =>
-            user.id === editingUserId ? response.data : user
-          )
-        );
-        setFormSuccess("User updated successfully!");
-      } else {
-        const createPayload = {
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          password: formData.password,
-        };
-        if (!formData.password) {
-          setFormError("Password is required for new users");
-          setFormLoading(false);
-          return;
-        }
-        response = await axios.post(AUTH_ENDPOINTS.USERS, createPayload, {
-          headers: getAuthHeaders(access),
-        });
-        setUsers([...users, response.data]);
-        setFormSuccess("User created successfully!");
-      }
-
-      setTimeout(() => {
-        if (editingUserId) {
-          setShowEditModal(false);
-        } else {
-          setShowModal(false);
-        }
-        setFormSuccess("");
-        setFormData({
-          name: "",
-          email: "",
-          role: "personnel",
-          password: "",
-          is_active: true,
-        });
-        setEditingUserId(null);
-        setCurrentUserId(null);
-      }, 1500);
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      setFormError(
-        err.response?.data?.detail || "An error occurred. Please try again."
-      );
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleClear = () => {
-    setFormData({
-      name: "",
-      email: "",
-      role: "personnel",
-      password: "",
-      is_active: true,
-    });
-    setFormError("");
-    setFormSuccess("");
-    setPasswordStrength("");
-    setShowPassword(false);
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [users]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUsers = users.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(users.length / itemsPerPage);
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   if (!isAuthenticated) {
     return (
       <div className="createusers-login-required">
-        <h2>Please login to create users</h2>
+        <h2>Please login to view users</h2>
         <a href="/login" className="createusers-login-button">
           Login
         </a>
@@ -377,113 +378,122 @@ const CreateUsers = () => {
     <div className="createusers-dashboard-container">
       <Sidebar />
       <div className="createusers-dashboard-content">
-        <Header title="Create Users" />
+        <Header title="Users" />
 
-        <div className="createusers-dashboard-main">
+        <div className="createusers-dashboard-main no-top-padding">
           <div className="createusers-container">
             <div className="createusers-header">
               <div className="createusers-title">
-                <i className="fas fa-users-cog createusers-icon"></i>
+                <i className="fas fa-users-cog createusers-green-icon"></i>
                 <h2>System Users</h2>
               </div>
-              <button
-                className="createusers-add-button"
-                onClick={handleAddUser}
-              >
-                <i className="fas fa-user-plus"></i> Create User
-              </button>
+              <div className="createusers-search-bar">
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="createusers-search-input"
+                />
+                <i className="fas fa-search"></i>
+              </div>
+              <div className="createusers-actions">
+                <button
+                  className="createusers-register-button"
+                  onClick={handleAddUser}
+                >
+                  <i className="fas fa-user-plus"></i> Create User
+                </button>
+              </div>
             </div>
 
             {loading ? (
               <BouncingSpinner />
             ) : error ? (
               <div className="createusers-error">{error}</div>
-            ) : users.length === 0 ? (
-              <div className="createusers-no-data">No users found</div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="createusers-no-data">
+                {searchTerm
+                  ? "No users found matching your search"
+                  : "No users found"}
+              </div>
             ) : (
               <>
-                <div className="createusers-table-wrapper">
-                  <table className="createusers-users-table">
-                    <thead>
-                      <tr>
-                        <th>Email</th>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Last Login</th>
-                        <th>Actions</th>
+                <table className="createusers-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="createusers-clickable-row"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>
+                          {user.role === "user_admin"
+                            ? "User Administrator"
+                            : user.role === "system_admin"
+                            ? "System Administrator"
+                            : "Personnel"}
+                        </td>
+                        <td>
+                          <span
+                            className={`createusers-status-badge ${
+                              user.is_active ? "active" : "inactive"
+                            }`}
+                          >
+                            {user.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td
+                          className="createusers-action-buttons"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="createusers-update-dot-button"
+                            onClick={() => handleEditUser(user)}
+                            title="Update user"
+                          >
+                            <i className="fas fa-ellipsis-h"></i>
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user.id}>
-                          <td>{user.email}</td>
-                          <td>{user.name}</td>
-                          <td>{ROLE_DISPLAY_NAMES[user.role] || user.role}</td>
-                          <td>
-                            <span
-                              className={`createusers-status-badge ${
-                                user.is_active ? "active" : "inactive"
-                              }`}
-                            >
-                              {user.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td>
-                            {user.last_login ? (
-                              <div className="createusers-last-login">
-                                <div>
-                                  {new Date(
-                                    user.last_login
-                                  ).toLocaleDateString()}
-                                </div>
-                                <div className="createusers-last-login-time">
-                                  {new Date(user.last_login).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              "Never"
-                            )}
-                          </td>
-                          <td className="createusers-actions-cell">
-                            <button
-                              className="createusers-edit-button"
-                              onClick={() => handleEditClick(user)}
-                              title="Edit user"
-                            >
-                              <i className="fas fa-edit"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
 
                 <div className="createusers-pagination-controls">
-                  <button
-                    className="createusers-pagination-button"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="fas fa-chevron-left"></i> Previous
-                  </button>
-                  <span className="createusers-pagination-info">
-                    Page {currentPage} of {totalPages}
+                  <div className="createusers-pagination-main">
+                    <button
+                      className="createusers-pagination-button"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="createusers-pagination-info">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      className="createusers-pagination-button"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <span className="createusers-user-count">
+                    {filteredUsers.length} users
                   </span>
-                  <button
-                    className="createusers-pagination-button"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next <i className="fas fa-chevron-right"></i>
-                  </button>
                 </div>
               </>
             )}
@@ -491,17 +501,17 @@ const CreateUsers = () => {
         </div>
       </div>
 
-      {showModal && (
+      {/* Registration/Edit Modal */}
+      {showFormModal && (
         <div className="createusers-modal-overlay">
           <div className="createusers-modal-content">
             <div className="createusers-modal-header">
               <div className="createusers-modal-title">
-                <i className="fas fa-user-plus createusers-modal-icon"></i>
-                <h2>Create New User</h2>
+                <h2>{isEditMode ? "Update User" : "Create User"}</h2>
               </div>
               <button
                 className="createusers-close-button"
-                onClick={() => setShowModal(false)}
+                onClick={() => setShowFormModal(false)}
               >
                 <i className="fas fa-times"></i>
               </button>
@@ -514,8 +524,9 @@ const CreateUsers = () => {
               <div className="createusers-form-success">{formSuccess}</div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <div className="createusers-form-group">
+            <form onSubmit={handleSubmit} className="createusers-modal-form">
+              {/* First Name & Last Name - Same Row */}
+              <div className="createusers-form-group createusers-form-group-full">
                 <label htmlFor="name">Full Name</label>
                 <input
                   type="text"
@@ -523,12 +534,18 @@ const CreateUsers = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="John Doe"
-                  required
+                  placeholder="Full name"
+                  className={fieldErrors.name ? "createusers-error-input" : ""}
                 />
+                {fieldErrors.name && (
+                  <div className="createusers-field-error">
+                    {fieldErrors.name}
+                  </div>
+                )}
               </div>
 
-              <div className="createusers-form-group">
+              {/* Email - Full Width */}
+              <div className="createusers-form-group createusers-form-group-full">
                 <label htmlFor="email">Email</label>
                 <input
                   type="email"
@@ -536,12 +553,24 @@ const CreateUsers = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="john@example.com"
-                  required
+                  placeholder="email@example.com"
+                  className={fieldErrors.email ? "createusers-error-input" : ""}
+                  readOnly={isEditMode} // Make email read-only in edit mode
                 />
+                {fieldErrors.email && (
+                  <div className="createusers-field-error">
+                    {fieldErrors.email}
+                  </div>
+                )}
+                {isEditMode && (
+                  <div className="createusers-email-note">
+                    Email cannot be changed
+                  </div>
+                )}
               </div>
 
-              <div className="createusers-form-group">
+              {/* Role - Full Width */}
+              <div className="createusers-form-group createusers-form-group-full">
                 <label htmlFor="role">Role</label>
                 <select
                   id="role"
@@ -551,257 +580,90 @@ const CreateUsers = () => {
                 >
                   <option value="personnel">Personnel</option>
                   <option value="user_admin">User Administrator</option>
-                  <option value="system_admin">System Administrator</option>
                 </select>
               </div>
 
-              <div className="createusers-form-group">
-                <div className="createusers-password-label-container">
-                  <label htmlFor="password">Password</label>
-                  <button
-                    type="button"
-                    className="createusers-generate-button"
-                    onClick={generateRandomPassword}
-                    disabled={formLoading}
-                    title="Generate random password"
-                  >
-                    <i className="fas fa-magic"></i> Generate
-                  </button>
-                </div>
-                <div className="createusers-password-input-container">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Enter password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="createusers-password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={formLoading}
-                  >
-                    {showPassword ? (
-                      <i className="fas fa-eye"></i>
-                    ) : (
-                      <i className="fas fa-eye-slash"></i>
-                    )}
-                  </button>
-                </div>
-                {passwordStrength && (
-                  <div
-                    className={`createusers-password-strength ${passwordStrength}`}
-                  >
-                    <div className="createusers-strength-text">
-                      Password strength:{" "}
-                      {passwordStrength.charAt(0).toUpperCase() +
-                        passwordStrength.slice(1)}
-                    </div>
-                    <div className="createusers-password-strength-meter">
-                      <div></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="createusers-form-actions">
-                <button
-                  type="submit"
-                  className="createusers-submit-button"
-                  disabled={formLoading}
-                >
-                  {formLoading ? (
-                    <div className="spinner white">
-                      <div className="bounce1"></div>
-                      <div className="bounce2"></div>
-                      <div className="bounce3"></div>
-                    </div>
-                  ) : (
-                    "Create User"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="createusers-clear-button"
-                  onClick={handleClear}
-                  disabled={formLoading}
-                >
-                  Clear
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showEditModal && (
-        <div className="createusers-modal-overlay">
-          <div className="createusers-modal-content">
-            <div className="createusers-modal-header">
-              <div className="createusers-modal-title">
-                <i className="fas fa-user-edit createusers-modal-icon"></i>
-                <h2>Edit User</h2>
-              </div>
-              <button
-                className="createusers-close-button"
-                onClick={() => setShowEditModal(false)}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            {formError && (
-              <div className="createusers-form-error">{formError}</div>
-            )}
-            {formSuccess && (
-              <div className="createusers-form-success">{formSuccess}</div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="createusers-form-group">
-                <label htmlFor="edit-name">Full Name</label>
-                <input
-                  type="text"
-                  id="edit-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-
-              <div className="createusers-form-group">
-                <label htmlFor="edit-email">Email (Read-only)</label>
-                <input
-                  type="email"
-                  id="edit-email"
-                  name="email"
-                  value={formData.email}
-                  disabled
-                  placeholder="john@example.com"
-                />
-              </div>
-
-              <div className="createusers-form-group">
-                <label htmlFor="edit-role">Role</label>
-                <select
-                  id="edit-role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                >
-                  <option value="personnel">Personnel</option>
-                  <option value="user_admin">User Administrator</option>
-                  <option value="system_admin">System Administrator</option>
-                </select>
-              </div>
-
-              <div className="createusers-form-group createusers-checkbox-group">
-                <input
-                  type="checkbox"
-                  id="edit-is-active"
-                  name="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
-                />
-                <label
-                  htmlFor="edit-is-active"
-                  className="createusers-checkbox-label"
-                >
-                  Active
-                </label>
-              </div>
-
-              <div className="createusers-form-group">
-                <div className="createusers-password-label-container">
-                  <label htmlFor="edit-password">
-                    Password (leave blank to keep current)
+              {/* Password - Full Width */}
+              <div className="createusers-form-group createusers-form-group-full">
+                <div className="createusers-password-header">
+                  <label htmlFor="password">
+                    Password {!isEditMode && "(required)"}
                   </label>
                   <button
                     type="button"
-                    className="createusers-generate-button"
+                    className="createusers-generate-password-button"
                     onClick={generateRandomPassword}
-                    disabled={formLoading}
-                    title="Generate random password"
                   >
                     <i className="fas fa-magic"></i> Generate
                   </button>
                 </div>
-                <div className="createusers-password-input-container">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="edit-password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Leave blank to keep current password"
-                  />
-                  <button
-                    type="button"
-                    className="createusers-password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={formLoading}
-                  >
-                    {showPassword ? (
-                      <i className="fas fa-eye"></i>
-                    ) : (
-                      <i className="fas fa-eye-slash"></i>
-                    )}
-                  </button>
-                </div>
-                {passwordStrength && (
-                  <div
-                    className={`createusers-password-strength ${passwordStrength}`}
-                  >
-                    <div className="createusers-strength-text">
-                      Password strength:{" "}
-                      {passwordStrength.charAt(0).toUpperCase() +
-                        passwordStrength.slice(1)}
-                    </div>
-                    <div className="createusers-password-strength-meter">
-                      <div></div>
-                    </div>
+                <input
+                  type="text"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder={
+                    isEditMode
+                      ? "Leave blank to keep current password"
+                      : "Enter password"
+                  }
+                  className={
+                    fieldErrors.password ? "createusers-error-input" : ""
+                  }
+                />
+                {fieldErrors.password && (
+                  <div className="createusers-field-error">
+                    {fieldErrors.password}
+                  </div>
+                )}
+                {!isEditMode && (
+                  <div className="createusers-password-hint">
+                    Password must be at least 8 characters long
                   </div>
                 )}
               </div>
 
               <div className="createusers-form-actions">
-                <button
-                  type="submit"
-                  className="createusers-submit-button"
-                  disabled={formLoading}
-                >
-                  {formLoading ? (
-                    <div className="spinner white">
-                      <div className="bounce1"></div>
-                      <div className="bounce2"></div>
-                      <div className="bounce3"></div>
-                    </div>
-                  ) : (
-                    "Update User"
+                <div className="createusers-form-buttons-row">
+                  <button
+                    type="submit"
+                    className="createusers-update-modal-button"
+                    disabled={formLoading}
+                  >
+                    {formLoading ? (
+                      <div className="createusers-spinner white">
+                        <div className="createusers-bounce1"></div>
+                        <div className="createusers-bounce2"></div>
+                        <div className="createusers-bounce3"></div>
+                      </div>
+                    ) : isEditMode ? (
+                      "Update"
+                    ) : (
+                      "Create"
+                    )}
+                  </button>
+
+                  {/* Delete button only shown in edit mode */}
+                  {isEditMode && (
+                    <button
+                      type="button"
+                      className="createusers-delete-modal-button"
+                      onClick={handleDeleteClick}
+                      disabled={formLoading}
+                    >
+                      Delete
+                    </button>
                   )}
-                </button>
-                <button
-                  type="button"
-                  className="createusers-delete-button-modal"
-                  onClick={() => handleDeleteClick({ id: editingUserId })}
-                  disabled={formLoading}
-                >
-                  <i className="fas fa-trash"></i> Delete User
-                </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {showDeleteConfirmModal && (
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
         <div className="createusers-modal-overlay">
           <div className="createusers-modal-content createusers-delete-modal">
             <div className="createusers-modal-header">
@@ -811,16 +673,23 @@ const CreateUsers = () => {
               </div>
               <button
                 className="createusers-close-button"
-                onClick={() => setShowDeleteConfirmModal(false)}
-                disabled={deleteLoading}
+                onClick={() => setShowDeleteModal(false)}
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
             <div className="createusers-delete-message">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              <p>
+                Are you sure you want to delete this user? This action cannot be
+                undone.
+              </p>
+              <div className="createusers-delete-warning">
+                <i className="fas fa-info-circle"></i>
+                <span>
+                  Deleting a user will remove all their access and permissions.
+                </span>
+              </div>
             </div>
 
             <div className="createusers-delete-actions">
@@ -830,10 +699,10 @@ const CreateUsers = () => {
                 disabled={deleteLoading}
               >
                 {deleteLoading ? (
-                  <div className="spinner white">
-                    <div className="bounce1"></div>
-                    <div className="bounce2"></div>
-                    <div className="bounce3"></div>
+                  <div className="createusers-spinner white">
+                    <div className="createusers-bounce1"></div>
+                    <div className="createusers-bounce2"></div>
+                    <div className="createusers-bounce3"></div>
                   </div>
                 ) : (
                   "Delete"
@@ -841,7 +710,7 @@ const CreateUsers = () => {
               </button>
               <button
                 className="createusers-delete-cancel-button"
-                onClick={() => setShowDeleteConfirmModal(false)}
+                onClick={() => setShowDeleteModal(false)}
                 disabled={deleteLoading}
               >
                 Cancel
@@ -854,10 +723,4 @@ const CreateUsers = () => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  isAuthenticated: state.auth.isAuthenticated,
-  access: state.auth.access,
-});
-
-import { connect } from "react-redux";
-export default connect(mapStateToProps)(CreateUsers);
+export default CreateUsers;
