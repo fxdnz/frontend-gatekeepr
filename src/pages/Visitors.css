@@ -958,3 +958,244 @@ body.dark-mode .retake-button:hover:not(:disabled) {
     height: 120px;
   }
 }
+
+/* Add this to Visitors.css */
+.field-info {
+  color: #666;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 4px 8px;
+  background-color: rgba(0, 192, 127, 0.05);
+  border-radius: 3px;
+  border-left: 3px solid #00c07f;
+}
+
+body.dark-mode .field-info {
+  color: #aaa;
+  background-color: rgba(0, 192, 127, 0.1);
+  border-left-color: #00a86b;
+}
+
+/* Add to the end of Visitors.css */
+
+/* Sign Out Button Styles */
+.sign-out-button {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
+  padding: 6px 12px;
+  font-size: 12.6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.sign-out-button:hover:not(:disabled) {
+  background-color: #e53935;
+  color: white;
+  border-color: #e53935;
+}
+
+.sign-out-button:disabled {
+  background-color: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Dark mode styles for sign-out button */
+body.dark-mode .sign-out-button {
+  background-color: #2a2a2a;
+  color: #aaa;
+  border-color: #444;
+}
+
+body.dark-mode .sign-out-button:hover:not(:disabled) {
+  background-color: #e538354b;
+  color: white;
+  border-color: #e53935;
+}
+
+/* Visitor status styles */
+.signed-out-status {
+  color: #00c07f;
+  font-size: 12.6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.has-resources-status {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Dark mode for status */
+body.dark-mode .signed-out-status {
+  color: #00a86b;
+}
+
+body.dark-mode .has-resources-status {
+  color: #aaa;
+}
+
+/* Update the existing sign-out-button styles */
+.sign-out-button {
+  background-color: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
+  padding: 6px 12px;
+  font-size: 12.6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.sign-out-button:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  color: #333;
+  border-color: #bbb;
+}
+
+.sign-out-button:disabled {
+  background-color: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Dark mode styles for sign-out button */
+body.dark-mode .sign-out-button {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .sign-out-button:hover:not(:disabled) {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #666;
+}
+
+body.dark-mode .sign-out-button:disabled {
+  background-color: #2a2a2a;
+  color: #777;
+}
+
+/* Visitor status styles */
+.signed-out-status {
+  color: #00c07f;
+  font-size: 12.6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.has-resources-status {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Dark mode for status */
+body.dark-mode .signed-out-status {
+  color: #00a86b;
+}
+
+body.dark-mode .has-resources-status {
+  color: #aaa;
+}
+
+/* Sign Out Modal specific styles */
+.sign-out-confirmation-text {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #333;
+}
+
+body.dark-mode .sign-out-confirmation-text {
+  color: #e0e0e0;
+}
+
+.visitor-details-container {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .visitor-details-container {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.visitor-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.visitor-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.visitor-detail-label {
+  color: #666;
+  font-size: 13px;
+  min-width: 120px;
+}
+
+body.dark-mode .visitor-detail-label {
+  color: #aaa;
+}
+
+.visitor-detail-value {
+  font-weight: 500;
+  text-align: right;
+  max-width: 200px;
+  word-break: break-word;
+}
+
+body.dark-mode .visitor-detail-value {
+  color: #e0e0e0;
+}
+
+.purpose-text {
+  max-width: 250px;
+  text-align: right;
+}
+
+.sign-out-note {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .sign-out-note {
+  color: #aaa;
+}
+
+/* Modal form text colors */
+body.dark-mode .modal-form {
+  color: #e0e0e0;
+}
+
+body.dark-mode .modal-form strong {
+  color: #fff;
+}

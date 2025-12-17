@@ -46,7 +46,7 @@ const Residents = () => {
   const [allParkingSlots, setAllParkingSlots] = useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 7;
 
   useEffect(() => {
     if (access && !user) {
@@ -206,15 +206,18 @@ const Residents = () => {
   const handleEditResident = (resident) => {
     setIsEditMode(true);
     setCurrentResidentId(resident.id);
+
+    // Now you get IDs directly from the API!
     setFormData({
       first_name: resident.first_name,
       last_name: resident.last_name,
-      rfid_uid: resident.rfid_uid,
+      rfid_uid: resident.rfid_id || "", // Use rfid_id from API
       plate_number: resident.plate_number,
       unit_number: resident.unit_number,
       phone: resident.phone,
-      parking_slot: resident.parking_slot,
+      parking_slot: resident.parking_slot_id || "", // Use parking_slot_id from API
     });
+
     setFieldErrors({});
     setShowFormModal(true);
   };

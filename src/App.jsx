@@ -65,14 +65,6 @@ const App = () => {
                 }
               />
               <Route
-                path="/reports"
-                element={
-                  <PrivateRoute>
-                    <Report />
-                  </PrivateRoute>
-                }
-              />
-              <Route
                 path="/visitors"
                 element={
                   <PrivateRoute>
@@ -88,11 +80,13 @@ const App = () => {
                   </PrivateRoute>
                 }
               />
+
+              {/* Reports - accessible to user_admin and system_admin */}
               <Route
-                path="/settings"
+                path="/reports"
                 element={
-                  <PrivateRoute>
-                    <Settings />
+                  <PrivateRoute allowedRoles={["system_admin", "user_admin"]}>
+                    <Report />
                   </PrivateRoute>
                 }
               />
@@ -119,6 +113,16 @@ const App = () => {
                 element={
                   <PrivateRoute allowedRoles={["system_admin", "user_admin"]}>
                     <CreateUsers />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Settings - Only for system_admin */}
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute allowedRoles={["system_admin"]}>
+                    <Settings />
                   </PrivateRoute>
                 }
               />

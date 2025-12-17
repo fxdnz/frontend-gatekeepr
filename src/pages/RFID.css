@@ -174,11 +174,6 @@
 }
 
 /* Action buttons cell */
-.rfid-page-action-buttons {
-  display: flex;
-  justify-content: flex-start;
-}
-
 .rfid-page-update-dot-button {
   background: none;
   border: none;

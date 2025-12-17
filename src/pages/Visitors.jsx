@@ -11,7 +11,7 @@ import "./Visitors.css";
 import BouncingSpinner from "../components/BouncingSpinner";
 import Webcam from "react-webcam";
 
-const GEMINI_API_KEY = "AIzaSyAhFjdWTmnlrR-Zx86MrqKESnAcvSzjeGw";
+const GEMINI_API_KEY = "AIzaSyC1ppqtEbmn9ArGlDyctJRH-lR1SADBhx4";
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -22,7 +22,6 @@ const Visitors = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Visitor form states
@@ -33,9 +32,13 @@ const Visitors = () => {
     address: "",
     plate_number: "",
     purpose: "",
-    rfid: "",
-    parking_slot: "",
+    rfid_id: "",
+    parking_slot_id: "",
   });
+  const [editingVisitorId, setEditingVisitorId] = useState(null);
+  const [currentlyAssignedRfid, setCurrentlyAssignedRfid] = useState(null);
+  const [currentlyAssignedParking, setCurrentlyAssignedParking] =
+    useState(null);
 
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
@@ -51,6 +54,13 @@ const Visitors = () => {
   const webcamRef = useRef(null);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
+
+  // Sign out states
+  const [signOutLoading, setSignOutLoading] = useState({});
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [visitorToSignOut, setVisitorToSignOut] = useState(null);
+  const [signOutMessage, setSignOutMessage] = useState("");
+  const [signOutError, setSignOutError] = useState("");
 
   // Dropdown data states
   const [availableRfids, setAvailableRfids] = useState([]);
@@ -103,19 +113,18 @@ const Visitors = () => {
 
       const availableRFIDs = rfidsRes.data.filter(
         (rfid) =>
-          !rfid.issued_to &&
-          !rfid.temporary_owner &&
+          rfid.is_temporary &&
           rfid.active &&
-          rfid.is_temporary
+          (!rfid.temporary_owner ||
+            (editingVisitorId && rfid.temporary_owner === editingVisitorId))
       );
       setAvailableRfids(availableRFIDs);
 
       const availableSlots = parkingSlotsRes.data.filter(
         (slot) =>
-          !slot.issued_to &&
-          !slot.temporary_owner &&
-          slot.status === "AVAILABLE" &&
-          slot.type === "FREE"
+          slot.type === "FREE" &&
+          (slot.status === "AVAILABLE" ||
+            (editingVisitorId && slot.temporary_owner === editingVisitorId))
       );
       setAvailableParkingSlots(availableSlots);
     } catch (err) {
@@ -137,32 +146,89 @@ const Visitors = () => {
     }, 5000);
 
     return () => clearInterval(pollingInterval);
-  }, [access, isAuthenticated, dispatch]);
+  }, [access, isAuthenticated, dispatch, editingVisitorId]);
 
-  // Filter visitors based on search term
-  const filteredVisitors = visitors.filter((visitor) => {
-    if (!searchTerm.trim()) return true;
+  // Check if a visitor has no assigned parking or RFID
+  const hasNoAssignedResources = (visitor) => {
+    return !visitor.rfid_details && !visitor.parking_slot_details;
+  };
 
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (visitor.first_name &&
-        visitor.first_name.toLowerCase().includes(searchLower)) ||
-      (visitor.last_name &&
-        visitor.last_name.toLowerCase().includes(searchLower)) ||
-      (visitor.drivers_license &&
-        visitor.drivers_license.toLowerCase().includes(searchLower)) ||
-      (visitor.address &&
-        visitor.address.toLowerCase().includes(searchLower)) ||
-      (visitor.plate_number &&
-        visitor.plate_number.toLowerCase().includes(searchLower)) ||
-      (visitor.purpose &&
-        visitor.purpose.toLowerCase().includes(searchLower)) ||
-      (visitor.rfid_uid &&
-        visitor.rfid_uid.toLowerCase().includes(searchLower)) ||
-      (visitor.parking_slot_display &&
-        visitor.parking_slot_display.toLowerCase().includes(searchLower))
-    );
-  });
+  // Open sign out modal
+  const openSignOutModal = (visitor) => {
+    if (!hasNoAssignedResources(visitor)) {
+      setSignOutError(
+        "Visitor has assigned RFID or parking slot. Please unassign resources first."
+      );
+      setShowSignOutModal(true);
+      setVisitorToSignOut(visitor);
+      return;
+    }
+
+    if (visitor.signed_out) {
+      setSignOutError("Visitor is already signed out.");
+      setShowSignOutModal(true);
+      setVisitorToSignOut(visitor);
+      return;
+    }
+
+    setVisitorToSignOut(visitor);
+    setSignOutError("");
+    setSignOutMessage("");
+    setShowSignOutModal(true);
+  };
+
+  // Handle sign out for visitor
+  const handleSignOut = async () => {
+    if (!visitorToSignOut) return;
+
+    setSignOutLoading((prev) => ({ ...prev, [visitorToSignOut.id]: true }));
+    setSignOutError("");
+    setSignOutMessage("");
+
+    try {
+      // Use the sign-out endpoint
+      const response = await axios.post(
+        API_ENDPOINTS.SIGN_OUT_VISITOR,
+        { visitor_id: visitorToSignOut.id },
+        { headers: getAuthHeaders(access) }
+      );
+
+      if (response.status === 200) {
+        setSignOutMessage(
+          response.data.message || "Visitor signed out successfully!"
+        );
+
+        // Refresh visitor data after a short delay
+        setTimeout(async () => {
+          await fetchVisitors();
+          // Close modal after success
+          setTimeout(() => {
+            setShowSignOutModal(false);
+            setVisitorToSignOut(null);
+          }, 1500);
+        }, 500);
+      }
+    } catch (err) {
+      console.error(
+        "Error signing out visitor:",
+        err.response?.data || err.message
+      );
+      setSignOutError(
+        err.response?.data?.message ||
+          "Failed to sign out visitor. Please try again."
+      );
+    } finally {
+      setSignOutLoading((prev) => ({ ...prev, [visitorToSignOut.id]: false }));
+    }
+  };
+
+  // Close sign out modal
+  const closeSignOutModal = () => {
+    setShowSignOutModal(false);
+    setVisitorToSignOut(null);
+    setSignOutError("");
+    setSignOutMessage("");
+  };
 
   // Format input values
   const formatInputValue = (name, value) => {
@@ -222,9 +288,28 @@ const Visitors = () => {
 
     try {
       const headers = getAuthHeaders(access);
-      await axios.post(API_ENDPOINTS.VISITORS, visitorForm, { headers });
 
-      setFormSuccess("Visitor logged successfully!");
+      const formData = {
+        ...visitorForm,
+        rfid_id: visitorForm.rfid_id || null,
+        parking_slot_id: visitorForm.parking_slot_id || null,
+      };
+
+      let response;
+      if (editingVisitorId) {
+        response = await axios.put(
+          `${API_ENDPOINTS.VISITORS}${editingVisitorId}/`,
+          formData,
+          { headers }
+        );
+        setFormSuccess("Visitor updated successfully!");
+      } else {
+        response = await axios.post(API_ENDPOINTS.VISITORS, formData, {
+          headers,
+        });
+        setFormSuccess("Visitor logged successfully!");
+      }
+
       setVisitorForm({
         first_name: "",
         last_name: "",
@@ -232,10 +317,13 @@ const Visitors = () => {
         address: "",
         plate_number: "",
         purpose: "",
-        rfid: "",
-        parking_slot: "",
+        rfid_id: "",
+        parking_slot_id: "",
       });
       setFieldErrors({});
+      setEditingVisitorId(null);
+      setCurrentlyAssignedRfid(null);
+      setCurrentlyAssignedParking(null);
 
       setTimeout(() => {
         setShowFormModal(false);
@@ -244,7 +332,14 @@ const Visitors = () => {
         fetchDropdownData();
       }, 1500);
     } catch (err) {
-      setFormError(err.response?.data?.detail || "Failed to log visitor");
+      console.error("Form submission error:", err.response?.data);
+      setFormError(
+        err.response?.data?.detail ||
+          err.response?.data?.message ||
+          err.response?.data?.rfid_id?.[0] ||
+          err.response?.data?.parking_slot_id?.[0] ||
+          "Failed to save visitor"
+      );
     } finally {
       setFormLoading(false);
     }
@@ -360,7 +455,6 @@ const Visitors = () => {
         return;
       }
 
-      // Format the extracted data
       const formattedData = {
         first_name:
           extracted.first_name
@@ -382,6 +476,7 @@ const Visitors = () => {
       setShowOCRScanModal(false);
       setShowFormModal(true);
       setLicenseFile(null);
+      setEditingVisitorId(null);
     } catch (error) {
       console.error("OCR Error:", error);
       setOcrError("OCR failed: " + error.message);
@@ -404,7 +499,10 @@ const Visitors = () => {
     setShowLogVisitorChoiceModal(true);
   };
 
-  const handleEditVisitor = (visitor) => {
+  const handleEditVisitor = async (visitor) => {
+    setEditingVisitorId(visitor.id);
+
+    // Use the IDs from the visitor object (now available from API)
     setVisitorForm({
       first_name: visitor.first_name || "",
       last_name: visitor.last_name || "",
@@ -412,17 +510,17 @@ const Visitors = () => {
       address: visitor.address || "",
       plate_number: visitor.plate_number || "",
       purpose: visitor.purpose || "",
-      rfid: visitor.rfid?.id || "", // Use the RFID ID for the form
-      parking_slot: visitor.parking_slot?.id || "", // Use the parking slot ID for the form
+      rfid_id: visitor.rfid_id || "", // Use rfid_id from API
+      parking_slot_id: visitor.parking_slot_id || "", // Use parking_slot_id from API
     });
+
     setFieldErrors({});
+    await fetchDropdownData();
     setShowFormModal(true);
   };
 
   const formatTimeStamp = (timestamp) => {
     const date = new Date(timestamp);
-
-    // Format date as MM-DD-YY
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const year = String(date.getFullYear()).slice(-2);
@@ -438,7 +536,35 @@ const Visitors = () => {
     };
   };
 
-  // Reset to page 1 when search term changes
+  // Filter visitors based on search term
+  const filteredVisitors = visitors.filter((visitor) => {
+    if (!searchTerm.trim()) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (visitor.first_name &&
+        visitor.first_name.toLowerCase().includes(searchLower)) ||
+      (visitor.last_name &&
+        visitor.last_name.toLowerCase().includes(searchLower)) ||
+      (visitor.drivers_license &&
+        visitor.drivers_license.toLowerCase().includes(searchLower)) ||
+      (visitor.address &&
+        visitor.address.toLowerCase().includes(searchLower)) ||
+      (visitor.plate_number &&
+        visitor.plate_number.toLowerCase().includes(searchLower)) ||
+      (visitor.purpose &&
+        visitor.purpose.toLowerCase().includes(searchLower)) ||
+      // Updated: Use rfid_details instead of rfid
+      (visitor.rfid_details?.uid &&
+        visitor.rfid_details.uid.toLowerCase().includes(searchLower)) ||
+      // Updated: Use parking_slot_details instead of parking_slot
+      (visitor.parking_slot_details?.slot_number &&
+        visitor.parking_slot_details.slot_number
+          .toLowerCase()
+          .includes(searchLower))
+    );
+  });
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -465,6 +591,26 @@ const Visitors = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleCloseFormModal = () => {
+    setVisitorForm({
+      first_name: "",
+      last_name: "",
+      drivers_license: "",
+      address: "",
+      plate_number: "",
+      purpose: "",
+      rfid_id: "",
+      parking_slot_id: "",
+    });
+    setEditingVisitorId(null);
+    setCurrentlyAssignedRfid(null);
+    setCurrentlyAssignedParking(null);
+    setFieldErrors({});
+    setFormError("");
+    setFormSuccess("");
+    setShowFormModal(false);
   };
 
   if (!isAuthenticated) {
@@ -532,11 +678,16 @@ const Visitors = () => {
                       <th>Purpose</th>
                       <th>RFID UID</th>
                       <th>Parking Slot</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentVisitors.map((visitor) => {
                       const { date, time } = formatTimeStamp(visitor.timestamp);
+                      const canSignOut = hasNoAssignedResources(visitor);
+                      const isLoading = signOutLoading[visitor.id];
+                      const isSignedOut = visitor.signed_out;
+
                       return (
                         <tr
                           key={visitor.id}
@@ -553,8 +704,50 @@ const Visitors = () => {
                           <td>{visitor.address}</td>
                           <td>{visitor.plate_number}</td>
                           <td>{visitor.purpose}</td>
-                          <td>{visitor.rfid?.uid || "N/A"}</td>
-                          <td>{visitor.parking_slot?.slot_number || "N/A"}</td>
+                          {/* Updated: Use rfid_details instead of rfid */}
+                          <td>{visitor.rfid_details?.uid || "N/A"}</td>
+                          {/* Updated: Use parking_slot_details instead of parking_slot */}
+                          <td>
+                            {visitor.parking_slot_details?.slot_number || "N/A"}
+                          </td>
+                          <td>
+                            {isSignedOut ? (
+                              <span className="signed-out-status">
+                                <i className="fas fa-check-circle"></i>
+                                Signed Out
+                              </span>
+                            ) : canSignOut ? (
+                              <button
+                                className="sign-out-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openSignOutModal(visitor);
+                                }}
+                                disabled={isLoading}
+                                title="Sign out visitor"
+                              >
+                                {isLoading ? (
+                                  <div
+                                    className="spinner"
+                                    style={{ margin: 0 }}
+                                  >
+                                    <div className="bounce1"></div>
+                                    <div className="bounce2"></div>
+                                    <div className="bounce3"></div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <i className="fas fa-sign-out-alt"></i>
+                                    Sign Out
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="has-resources-status">
+                                Has assigned resources
+                              </span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -591,6 +784,144 @@ const Visitors = () => {
         </div>
       </div>
 
+      {/* Sign Out Confirmation Modal */}
+      {showSignOutModal && (
+        <div className="visitors-modal-overlay">
+          <div className="visitors-modal-content">
+            <div className="visitors-modal-header">
+              <div className="visitors-modal-title">
+                <i className="fas fa-sign-out-alt users-green"></i>
+                <h2>Sign Out Visitor</h2>
+              </div>
+              <button
+                className="visitors-close-button"
+                onClick={closeSignOutModal}
+                disabled={signOutLoading[visitorToSignOut?.id]}
+              >
+                ×
+              </button>
+            </div>
+
+            {signOutError && <div className="form-error">{signOutError}</div>}
+            {signOutMessage && (
+              <div className="form-success">{signOutMessage}</div>
+            )}
+
+            {!signOutMessage && visitorToSignOut && (
+              <div className="modal-form">
+                <div className="form-group form-group-full">
+                  <p className="sign-out-confirmation-text">
+                    Are you sure you want to sign out{" "}
+                    <strong>
+                      {visitorToSignOut.first_name} {visitorToSignOut.last_name}
+                    </strong>
+                    ?
+                  </p>
+
+                  <div className="visitor-details-container">
+                    <div className="visitor-detail-row">
+                      <span className="visitor-detail-label">
+                        Driver's License:
+                      </span>
+                      <span className="visitor-detail-value">
+                        {visitorToSignOut.drivers_license}
+                      </span>
+                    </div>
+                    <div className="visitor-detail-row">
+                      <span className="visitor-detail-label">
+                        Plate Number:
+                      </span>
+                      <span className="visitor-detail-value">
+                        {visitorToSignOut.plate_number || "N/A"}
+                      </span>
+                    </div>
+                    <div className="visitor-detail-row">
+                      <span className="visitor-detail-label">RFID:</span>
+                      <span className="visitor-detail-value">
+                        {visitorToSignOut.rfid_details?.uid || "N/A"}
+                      </span>
+                    </div>
+                    <div className="visitor-detail-row">
+                      <span className="visitor-detail-label">
+                        Parking Slot:
+                      </span>
+                      <span className="visitor-detail-value">
+                        {visitorToSignOut.parking_slot_details?.slot_number ||
+                          "N/A"}
+                      </span>
+                    </div>
+                    <div className="visitor-detail-row">
+                      <span className="visitor-detail-label">Purpose:</span>
+                      <span className="visitor-detail-value purpose-text">
+                        {visitorToSignOut.purpose}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="sign-out-note">
+                    This will create an exit log and mark the visitor as signed
+                    out. The visitor record will remain in the system.
+                  </p>
+                </div>
+
+                <div className="form-actions">
+                  <div className="form-buttons-row">
+                    <button
+                      type="button"
+                      className="update-modal-button"
+                      onClick={handleSignOut}
+                      disabled={signOutLoading[visitorToSignOut.id]}
+                      style={{
+                        backgroundColor: "#00c07f",
+                        color: "white",
+                        borderColor: "#00c07f",
+                      }}
+                    >
+                      {signOutLoading[visitorToSignOut.id] ? (
+                        <div className="spinner white">
+                          <div className="bounce1"></div>
+                          <div className="bounce2"></div>
+                          <div className="bounce3"></div>
+                        </div>
+                      ) : (
+                        "Confirm Sign Out"
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="delete-modal-button"
+                      onClick={closeSignOutModal}
+                      disabled={signOutLoading[visitorToSignOut.id]}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {signOutMessage && (
+              <div className="form-actions">
+                <div className="form-buttons-row">
+                  <button
+                    type="button"
+                    className="update-modal-button"
+                    onClick={closeSignOutModal}
+                    style={{
+                      backgroundColor: "#00c07f",
+                      color: "white",
+                      borderColor: "#00c07f",
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Log Visitor Choice Modal */}
       {showLogVisitorChoiceModal && (
         <div className="visitors-modal-overlay">
@@ -614,6 +945,9 @@ const Visitors = () => {
                 onClick={() => {
                   setShowLogVisitorChoiceModal(false);
                   setShowFormModal(true);
+                  setEditingVisitorId(null);
+                  setCurrentlyAssignedRfid(null);
+                  setCurrentlyAssignedParking(null);
                 }}
               >
                 <i className="fas fa-keyboard"></i>
@@ -626,6 +960,9 @@ const Visitors = () => {
                 onClick={() => {
                   setShowLogVisitorChoiceModal(false);
                   setShowOCRScanModal(true);
+                  setEditingVisitorId(null);
+                  setCurrentlyAssignedRfid(null);
+                  setCurrentlyAssignedParking(null);
                 }}
               >
                 <i className="fas fa-id-card"></i>
@@ -646,18 +983,18 @@ const Visitors = () => {
                 <button
                   className="visitors-back-button"
                   onClick={() => {
-                    setShowFormModal(false);
+                    handleCloseFormModal();
                     setShowLogVisitorChoiceModal(true);
                   }}
                 >
                   <i className="fas fa-arrow-left"></i>
                 </button>
                 <i className="fas fa-user-shield users-green"></i>
-                <h2>Log Visitor</h2>
+                <h2>{editingVisitorId ? "Edit Visitor" : "Log Visitor"}</h2>
               </div>
               <button
                 className="visitors-close-button"
-                onClick={() => setShowFormModal(false)}
+                onClick={handleCloseFormModal}
               >
                 ×
               </button>
@@ -773,36 +1110,105 @@ const Visitors = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="rfid">RFID</label>
+                  <label htmlFor="rfid_id">RFID</label>
                   <select
-                    id="rfid"
-                    name="rfid"
-                    value={visitorForm.rfid}
+                    id="rfid_id"
+                    name="rfid_id"
+                    value={visitorForm.rfid_id}
                     onChange={handleVisitorInputChange}
                   >
                     <option value="">No RFID</option>
-                    {availableRfids.map((rfid) => (
-                      <option key={rfid.id} value={rfid.id}>
-                        {rfid.uid} - Temporary
-                      </option>
-                    ))}
+                    {/* Show current RFID if editing */}
+                    {editingVisitorId &&
+                      visitorForm.rfid_id &&
+                      (() => {
+                        const currentRfid = availableRfids.find(
+                          (r) => r.id === visitorForm.rfid_id
+                        );
+                        return currentRfid ? (
+                          <option key={currentRfid.id} value={currentRfid.id}>
+                            {currentRfid.uid} (Current)
+                          </option>
+                        ) : null;
+                      })()}
+                    {/* Show available RFIDs */}
+                    {availableRfids.map((rfid) => {
+                      // Skip if this is the current RFID
+                      if (
+                        editingVisitorId &&
+                        visitorForm.rfid_id &&
+                        rfid.id === visitorForm.rfid_id
+                      ) {
+                        return null;
+                      }
+
+                      const isAvailable =
+                        !rfid.temporary_owner ||
+                        rfid.temporary_owner === editingVisitorId;
+
+                      return (
+                        <option
+                          key={rfid.id}
+                          value={rfid.id}
+                          disabled={!isAvailable}
+                        >
+                          {rfid.uid} - Temporary
+                          {!isAvailable && " - Assigned"}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="parking_slot">Parking Slot</label>
+                  <label htmlFor="parking_slot_id">Parking Slot</label>
                   <select
-                    id="parking_slot"
-                    name="parking_slot"
-                    value={visitorForm.parking_slot}
+                    id="parking_slot_id"
+                    name="parking_slot_id"
+                    value={visitorForm.parking_slot_id}
                     onChange={handleVisitorInputChange}
                   >
                     <option value="">No parking slot</option>
-                    {availableParkingSlots.map((slot) => (
-                      <option key={slot.id} value={slot.id}>
-                        {slot.slot_number} ({slot.type}) - {slot.location}
-                      </option>
-                    ))}
+                    {/* Show current parking slot if editing */}
+                    {editingVisitorId &&
+                      visitorForm.parking_slot_id &&
+                      (() => {
+                        const currentSlot = availableParkingSlots.find(
+                          (s) => s.id === visitorForm.parking_slot_id
+                        );
+                        return currentSlot ? (
+                          <option key={currentSlot.id} value={currentSlot.id}>
+                            {currentSlot.slot_number} (Current)
+                          </option>
+                        ) : null;
+                      })()}
+                    {/* Show available parking slots */}
+                    {availableParkingSlots.map((slot) => {
+                      // Skip if this is the current slot
+                      if (
+                        editingVisitorId &&
+                        visitorForm.parking_slot_id &&
+                        slot.id === visitorForm.parking_slot_id
+                      ) {
+                        return null;
+                      }
+
+                      const isAvailable =
+                        !slot.temporary_owner ||
+                        slot.temporary_owner === editingVisitorId;
+
+                      return (
+                        <option
+                          key={slot.id}
+                          value={slot.id}
+                          disabled={!isAvailable}
+                        >
+                          {slot.slot_number} ({slot.type}) -{" "}
+                          {slot.location_display}
+                          {!isAvailable && " - Occupied"}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
@@ -820,6 +1226,8 @@ const Visitors = () => {
                         <div className="bounce2"></div>
                         <div className="bounce3"></div>
                       </div>
+                    ) : editingVisitorId ? (
+                      "Update"
                     ) : (
                       "Submit"
                     )}
@@ -835,10 +1243,13 @@ const Visitors = () => {
                         address: "",
                         plate_number: "",
                         purpose: "",
-                        rfid: "",
-                        parking_slot: "",
+                        rfid_id: "",
+                        parking_slot_id: "",
                       });
                       setFieldErrors({});
+                      setEditingVisitorId(null);
+                      setCurrentlyAssignedRfid(null);
+                      setCurrentlyAssignedParking(null);
                     }}
                     disabled={formLoading}
                   >

@@ -538,7 +538,6 @@ const RFID = () => {
                         return (
                           <tr
                             key={rfid.id}
-                            className="rfid-page-clickable-row"
                             onClick={() => handleEditRfid(rfid)}
                           >
                             <td>{rfid.uid}</td>

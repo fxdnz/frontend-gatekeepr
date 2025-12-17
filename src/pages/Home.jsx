@@ -11,7 +11,7 @@ import Header from "../components/Header";
 import "./Home.css";
 import Webcam from "react-webcam";
 
-const GEMINI_API_KEY = "AIzaSyAhFjdWTmnlrR-Zx86MrqKESnAcvSzjeGw";
+const GEMINI_API_KEY = "AIzaSyA3Ok39YpzUOfK11SCR6G0NqEWLselT_zE";
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -35,6 +35,7 @@ const Home = () => {
   const [showVisitorModal, setShowVisitorModal] = useState(false);
   const [showOCRScanModal, setShowOCRScanModal] = useState(false);
 
+  // Visitor form states
   const [visitorForm, setVisitorForm] = useState({
     first_name: "",
     last_name: "",
@@ -42,8 +43,8 @@ const Home = () => {
     address: "",
     plate_number: "",
     purpose: "",
-    rfid: "",
-    parking_slot: "",
+    rfid_id: "", // Changed from rfid to rfid_id
+    parking_slot_id: "", // Changed from parking_slot to parking_slot_id
   });
 
   const [visitorError, setVisitorError] = useState("");
@@ -60,6 +61,9 @@ const Home = () => {
   const [availableRfids, setAvailableRfids] = useState([]);
   const [availableParkingSlots, setAvailableParkingSlots] = useState([]);
 
+  // Use refs to store visitors for parking lookup
+  const visitorsRef = useRef([]);
+
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -75,12 +79,13 @@ const Home = () => {
   const fetchData = async (token) => {
     const headers = getAuthHeaders(token);
     try {
-      const [parkingRes, logsRes, rfidsRes, parkingSlotsRes] =
+      const [parkingRes, logsRes, rfidsRes, parkingSlotsRes, visitorsRes] =
         await Promise.all([
           axios.get(API_ENDPOINTS.PARKING, { headers }),
           axios.get(API_ENDPOINTS.ACCESS_LOGS, { headers }),
           axios.get(API_ENDPOINTS.RFID, { headers }),
           axios.get(API_ENDPOINTS.PARKING, { headers }),
+          axios.get(API_ENDPOINTS.VISITORS, { headers }),
         ]);
 
       const parkingStats = parkingRes.data;
@@ -97,36 +102,118 @@ const Home = () => {
           ).length || 0,
       });
 
-      const allLogs = logsRes.data
-        .map((log) => ({
+      // Store visitors for parking lookup
+      visitorsRef.current = visitorsRes.data;
+
+      // Create a map of visitor IDs to their parking slot details
+      const visitorParkingMap = {};
+      visitorsRes.data.forEach((visitor) => {
+        if (visitor.parking_slot_details) {
+          visitorParkingMap[visitor.id] =
+            visitor.parking_slot_details.slot_number || "-";
+        }
+      });
+
+      // Process logs to extract information from resident_details and visitor_log_details
+      const allLogs = logsRes.data.map((log) => {
+        let name = "N/A";
+        let plateNumber = "-";
+        let parkingSlot = "-";
+
+        // Extract information based on type
+        if (log.type === "RESIDENT" && log.resident_details) {
+          // Get name from resident_details
+          name =
+            log.resident_details.name ||
+            `${log.resident_details.first_name || ""} ${
+              log.resident_details.last_name || ""
+            }`.trim() ||
+            "Resident";
+
+          // Get plate number from resident_details
+          plateNumber = log.resident_details.plate_number || "-";
+        } else if (log.type === "VISITOR") {
+          // Check if log has visitor_log_details
+          if (log.visitor_log_details) {
+            const visitorId = log.visitor_log_details.id;
+            // Get name from visitor_log_details
+            name =
+              log.visitor_log_details.name ||
+              `${log.visitor_log_details.first_name || ""} ${
+                log.visitor_log_details.last_name || ""
+              }`.trim() ||
+              "Visitor";
+
+            // Get plate number from visitor_log_details
+            plateNumber = log.visitor_log_details.plate_number || "-";
+
+            // Get parking slot from visitor parking map
+            if (visitorParkingMap[visitorId]) {
+              parkingSlot = visitorParkingMap[visitorId];
+            }
+          }
+        } else {
+          // Fallback for logs without details
+          name = log.type === "RESIDENT" ? "Resident" : "Visitor";
+        }
+
+        // Get parking slot - check multiple sources in priority order:
+
+        // 1. First, check if log has parking_details directly
+        if (log.parking_details) {
+          parkingSlot = log.parking_details.slot_number || "-";
+        }
+        // 2. For visitors, if parking still not found and we have visitorId, check map again
+        else if (
+          log.type === "VISITOR" &&
+          log.visitor_log_details &&
+          parkingSlot === "-"
+        ) {
+          const visitorId = log.visitor_log_details.id;
+          if (visitorParkingMap[visitorId]) {
+            parkingSlot = visitorParkingMap[visitorId];
+          }
+        }
+
+        return {
           ...log,
-          plate_number: log.plate_number || "-",
-          parking_slot: log.parking?.slot_number || "-",
-          type: log.type || log.user_type || "RESIDENT",
-        }))
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          name: name || "N/A",
+          plate_number: plateNumber || "-",
+          parking_slot: parkingSlot || "-",
+          action: log.action || "N/A",
+          type: log.type || "N/A",
+        };
+      });
 
-      const visitors = allLogs.filter(
-        (log) => log.type?.toUpperCase() === "VISITOR"
+      // Sort by timestamp (newest first)
+      const sortedLogs = allLogs.sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
       );
-      setVisitorLogs(visitors.slice(0, 4));
-      setRecentActivityLogs(allLogs.slice(0, 7));
 
+      // Filter and set visitor logs (first 4)
+      const visitors = sortedLogs.filter((log) => log.type === "VISITOR");
+      setVisitorLogs(visitors.slice(0, 4));
+
+      // Set recent activity logs (first 7)
+      setRecentActivityLogs(sortedLogs.slice(0, 7));
+
+      // For RFID: include temporary RFID that are currently unassigned
       const availableRFIDs = rfidsRes.data.filter(
         (rfid) =>
-          !rfid.issued_to &&
-          !rfid.temporary_owner &&
+          rfid.is_temporary &&
           rfid.active &&
-          rfid.is_temporary
+          !rfid.temporary_owner &&
+          !rfid.issued_to
       );
       setAvailableRfids(availableRFIDs);
 
+      // For parking slots: include FREE slots that are AVAILABLE
       const availableSlots = parkingSlotsRes.data.filter(
         (slot) =>
-          !slot.issued_to &&
-          !slot.temporary_owner &&
+          slot.type === "FREE" &&
           slot.status === "AVAILABLE" &&
-          slot.type === "FREE"
+          !slot.temporary_owner &&
+          !slot.issued_to
       );
       setAvailableParkingSlots(availableSlots);
     } catch (err) {
@@ -166,10 +253,8 @@ const Home = () => {
   // Format input values
   const formatInputValue = (name, value) => {
     if (name === "first_name" || name === "last_name" || name === "purpose") {
-      // Capitalize first letter of each word
       return value.replace(/\b\w/g, (char) => char.toUpperCase());
     } else if (name === "plate_number" || name === "drivers_license") {
-      // Convert to uppercase
       return value.toUpperCase();
     }
     return value;
@@ -204,7 +289,6 @@ const Home = () => {
       errors.drivers_license = "Driver's license is required";
     if (!visitorForm.address.trim()) errors.address = "Address is required";
     if (!visitorForm.purpose.trim()) errors.purpose = "Purpose is required";
-    // Add this line for plate number validation
     if (!visitorForm.plate_number.trim())
       errors.plate_number = "Plate number is required";
 
@@ -225,9 +309,22 @@ const Home = () => {
 
     try {
       const headers = getAuthHeaders(access);
-      await axios.post(API_ENDPOINTS.VISITORS, visitorForm, { headers });
+
+      // Prepare data for API - use rfid_id and parking_slot_id
+      const formData = {
+        ...visitorForm,
+        rfid_id: visitorForm.rfid_id || null,
+        parking_slot_id: visitorForm.parking_slot_id || null,
+      };
+
+      // Create new visitor
+      const response = await axios.post(API_ENDPOINTS.VISITORS, formData, {
+        headers,
+      });
 
       setVisitorSuccess("Visitor logged successfully!");
+
+      // Reset form
       setVisitorForm({
         first_name: "",
         last_name: "",
@@ -235,8 +332,8 @@ const Home = () => {
         address: "",
         plate_number: "",
         purpose: "",
-        rfid: "",
-        parking_slot: "",
+        rfid_id: "",
+        parking_slot_id: "",
       });
       setFormErrors({});
 
@@ -246,7 +343,14 @@ const Home = () => {
         fetchData(access);
       }, 1500);
     } catch (err) {
-      setVisitorError(err.response?.data?.detail || "Failed to log visitor");
+      console.error("Form submission error:", err.response?.data);
+      setVisitorError(
+        err.response?.data?.detail ||
+          err.response?.data?.message ||
+          err.response?.data?.rfid_id?.[0] ||
+          err.response?.data?.parking_slot_id?.[0] ||
+          "Failed to log visitor"
+      );
     } finally {
       setVisitorLoading(false);
     }
@@ -403,7 +507,12 @@ const Home = () => {
   }, [webcamActive]);
 
   const formatTimeStamp = (timestamp) => {
+    if (!timestamp) return { date: "N/A", time: "N/A" };
+
     const date = new Date(timestamp);
+    if (isNaN(date.getTime()))
+      return { date: "Invalid Date", time: "Invalid Time" };
+
     return {
       date: date.toISOString().split("T")[0],
       time: date.toLocaleTimeString([], {
@@ -413,6 +522,24 @@ const Home = () => {
         hour12: false,
       }),
     };
+  };
+
+  // Reset form when closing modal
+  const handleCloseFormModal = () => {
+    setVisitorForm({
+      first_name: "",
+      last_name: "",
+      drivers_license: "",
+      address: "",
+      plate_number: "",
+      purpose: "",
+      rfid_id: "",
+      parking_slot_id: "",
+    });
+    setFormErrors({});
+    setVisitorError("");
+    setVisitorSuccess("");
+    setShowVisitorModal(false);
   };
 
   if (!isAuthenticated) {
@@ -556,6 +683,7 @@ const Home = () => {
                         <th>Activity</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {visitorLogs.length === 0 ? (
                         <tr>
@@ -571,8 +699,12 @@ const Home = () => {
                                 <div className="time-sub">{time}</div>
                               </td>
                               <td>{log.name || "N/A"}</td>
-                              <td>{log.plate_number}</td>
-                              <td>{log.parking_slot}</td>
+                              <td>{log.plate_number || "-"}</td>
+                              <td>
+                                {log.parking_slot === "-"
+                                  ? "Not Assigned"
+                                  : log.parking_slot || "-"}
+                              </td>
                               <td>
                                 <span
                                   className={`activity-tag-dashboard ${
@@ -581,7 +713,7 @@ const Home = () => {
                                       : "exit"
                                   }`}
                                 >
-                                  {log.action}
+                                  {log.action || "N/A"}
                                 </span>
                               </td>
                             </tr>
@@ -596,7 +728,7 @@ const Home = () => {
               <div className="right-bento">
                 <div className="recentactivity-header">
                   <div className="recentactivity-title">
-                    <i class="fas fa-history green-icon"></i>
+                    <i className="fas fa-history green-icon"></i>
                     <h3>Recent Activities</h3>
                   </div>
                   <Link to="/reports" className="reports-button">
@@ -628,7 +760,7 @@ const Home = () => {
                               <div className="time-sub">{time}</div>
                             </td>
                             <td>{log.name || "N/A"}</td>
-                            <td>{log.type}</td>
+                            <td>{log.type || "N/A"}</td>
                             <td>
                               <span
                                 className={`activity-tag-dashboard ${
@@ -637,7 +769,7 @@ const Home = () => {
                                     : "exit"
                                 }`}
                               >
-                                {log.action}
+                                {log.action || "N/A"}
                               </span>
                             </td>
                           </tr>
@@ -707,7 +839,7 @@ const Home = () => {
                 <button
                   className="home-back-button"
                   onClick={() => {
-                    setShowVisitorModal(false);
+                    handleCloseFormModal();
                     setShowLogVisitorChoiceModal(true);
                   }}
                 >
@@ -718,7 +850,7 @@ const Home = () => {
               </div>
               <button
                 className="home-close-button"
-                onClick={() => setShowVisitorModal(false)}
+                onClick={handleCloseFormModal}
               >
                 ×
               </button>
@@ -792,9 +924,8 @@ const Home = () => {
                     value={visitorForm.plate_number}
                     onChange={handleVisitorInputChange}
                     placeholder="ABC 1234"
-                    className={formErrors.plate_number ? "error-input" : ""} // Add this
+                    className={formErrors.plate_number ? "error-input" : ""}
                   />
-                  {/* Add this error display */}
                   {formErrors.plate_number && (
                     <div className="field-error">{formErrors.plate_number}</div>
                   )}
@@ -835,34 +966,37 @@ const Home = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="rfid">RFID</label>
+                  <label htmlFor="rfid_id">RFID</label>
                   <select
-                    id="rfid"
-                    name="rfid"
-                    value={visitorForm.rfid}
+                    id="rfid_id"
+                    name="rfid_id"
+                    value={visitorForm.rfid_id}
                     onChange={handleVisitorInputChange}
                   >
                     <option value="">No RFID</option>
                     {availableRfids.map((rfid) => (
                       <option key={rfid.id} value={rfid.id}>
                         {rfid.uid} - Temporary
+                        {rfid.temporary_owner ? " (Assigned)" : ""}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="parking_slot">Parking Slot</label>
+                  <label htmlFor="parking_slot_id">Parking Slot</label>
                   <select
-                    id="parking_slot"
-                    name="parking_slot"
-                    value={visitorForm.parking_slot}
+                    id="parking_slot_id"
+                    name="parking_slot_id"
+                    value={visitorForm.parking_slot_id}
                     onChange={handleVisitorInputChange}
                   >
                     <option value="">No parking slot</option>
                     {availableParkingSlots.map((slot) => (
                       <option key={slot.id} value={slot.id}>
-                        {slot.slot_number} ({slot.type}) - {slot.location}
+                        {slot.slot_number} ({slot.type}) -{" "}
+                        {slot.location_display || slot.location}
+                        {slot.temporary_owner ? " (Occupied)" : ""}
                       </option>
                     ))}
                   </select>
@@ -897,8 +1031,8 @@ const Home = () => {
                         address: "",
                         plate_number: "",
                         purpose: "",
-                        rfid: "",
-                        parking_slot: "",
+                        rfid_id: "",
+                        parking_slot_id: "",
                       });
                       setFormErrors({});
                     }}
@@ -914,8 +1048,6 @@ const Home = () => {
       )}
 
       {/* OCR Scan Modal */}
-      {/* OCR Scan Modal */}
-      {/* OCR Scan Modal */}
       {showOCRScanModal && (
         <div className="home-modal-overlay">
           <div className="home-modal-content choice-modal">
@@ -925,13 +1057,10 @@ const Home = () => {
                   className="home-back-button"
                   onClick={() => {
                     if (webcamActive) {
-                      // If camera is active, go back to photo selection
                       setWebcamActive(false);
                     } else if (licenseFile) {
-                      // If there's a captured photo, just remove it and stay in OCR modal
                       setLicenseFile(null);
                     } else {
-                      // If no photo and camera not active, go back to manual/OCR choice
                       setShowOCRScanModal(false);
                       setShowLogVisitorChoiceModal(true);
                     }

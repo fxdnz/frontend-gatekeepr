@@ -493,11 +493,6 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.createusers-action-buttons {
-  display: flex;
-  justify-content: flex-start;
-}
-
 /* Status badge */
 .createusers-status-badge {
   display: inline-block;

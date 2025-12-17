@@ -356,7 +356,7 @@ const Settings = () => {
                         </button>
                       </div>
 
-                      {resetSuccess && (
+                      {/* {resetSuccess && (
                         <div className="password-reset-info">
                           <i className="fas fa-info-circle"></i>
                           <span>
@@ -366,7 +366,7 @@ const Settings = () => {
                             password.
                           </span>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>

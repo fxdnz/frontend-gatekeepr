@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { load_user } from "../actions/auth";
@@ -23,7 +23,12 @@ const Logs = () => {
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 6;
+  const logsPerPage = 5;
+
+  // Use refs to store previous data to prevent flickering
+  const visitorsRef = useRef([]);
+  const logsRef = useRef([]);
+  const visitorParkingMapRef = useRef({});
 
   useEffect(() => {
     if (access && !user) {
@@ -31,27 +36,114 @@ const Logs = () => {
     }
   }, [access, user, dispatch]);
 
-  const fetchLogs = async (token) => {
+  const fetchAllData = async (token) => {
     const headers = getAuthHeaders(token);
 
-    const [logsResponse, visitorsResponse] = await Promise.all([
-      axios.get(API_ENDPOINTS.ACCESS_LOGS, { headers }),
-      axios.get(API_ENDPOINTS.VISITORS, { headers }),
-    ]);
+    try {
+      // Fetch both access logs and visitors
+      const [logsResponse, visitorsResponse] = await Promise.all([
+        axios.get(API_ENDPOINTS.ACCESS_LOGS, { headers }),
+        axios.get(API_ENDPOINTS.VISITORS, { headers }),
+      ]);
 
-    const processedLogs = logsResponse.data
-      .map((log) => ({
-        ...log,
-        plate_number: log.plate_number || "-",
-        parking_slot: log.parking?.slot_number || "-",
-        type: log.type || log.user_type || "RESIDENT",
-        name: log.name || "N/A",
-      }))
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      // Create a map of visitor IDs to their parking slot details
+      const newVisitorParkingMap = {};
+      visitorsResponse.data.forEach((visitor) => {
+        if (visitor.parking_slot_details) {
+          newVisitorParkingMap[visitor.id] =
+            visitor.parking_slot_details.slot_number || "-";
+        }
+      });
 
-    setLogs(processedLogs);
-    setVisitors(visitorsResponse.data);
-    setFilteredLogs(processedLogs);
+      // Update refs with new data
+      visitorParkingMapRef.current = newVisitorParkingMap;
+      visitorsRef.current = visitorsResponse.data;
+
+      // Process logs to extract information
+      const processedLogs = logsResponse.data.map((log) => {
+        let name = "N/A";
+        let plateNumber = "-";
+        let parkingSlot = "-";
+
+        // Extract information based on type
+        if (log.type === "RESIDENT" && log.resident_details) {
+          // Get name from resident_details
+          name =
+            log.resident_details.name ||
+            `${log.resident_details.first_name || ""} ${
+              log.resident_details.last_name || ""
+            }`.trim() ||
+            "Resident";
+
+          // Get plate number from resident_details
+          plateNumber = log.resident_details.plate_number || "-";
+        } else if (log.type === "VISITOR") {
+          // Check if log has visitor_log_details
+          if (log.visitor_log_details) {
+            const visitorId = log.visitor_log_details.id;
+            // Get name from visitor_log_details
+            name =
+              log.visitor_log_details.name ||
+              `${log.visitor_log_details.first_name || ""} ${
+                log.visitor_log_details.last_name || ""
+              }`.trim() ||
+              "Visitor";
+
+            // Get plate number from visitor_log_details
+            plateNumber = log.visitor_log_details.plate_number || "-";
+
+            // Get parking slot from visitor parking map
+            if (newVisitorParkingMap[visitorId]) {
+              parkingSlot = newVisitorParkingMap[visitorId];
+            }
+          }
+        } else {
+          // Fallback for logs without details
+          name = log.type === "RESIDENT" ? "Resident" : "Visitor";
+        }
+
+        // Get parking slot - check multiple sources in priority order:
+
+        // 1. First, check if log has parking_details directly
+        if (log.parking_details) {
+          parkingSlot = log.parking_details.slot_number || "-";
+        }
+        // 2. For visitors, if parking still not found and we have visitorId, check map again
+        else if (
+          log.type === "VISITOR" &&
+          log.visitor_log_details &&
+          parkingSlot === "-"
+        ) {
+          const visitorId = log.visitor_log_details.id;
+          if (newVisitorParkingMap[visitorId]) {
+            parkingSlot = newVisitorParkingMap[visitorId];
+          }
+        }
+
+        return {
+          ...log,
+          name: name || "N/A",
+          plate_number: plateNumber || "-",
+          parking_slot: parkingSlot || "-",
+          action: log.action || "N/A",
+          type: log.type || "N/A",
+        };
+      });
+
+      // Sort by timestamp (newest first)
+      const sortedLogs = processedLogs.sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+      );
+
+      // Update ref and state
+      logsRef.current = sortedLogs;
+      setLogs(sortedLogs);
+      setVisitors(visitorsResponse.data);
+      setFilteredLogs(sortedLogs);
+    } catch (error) {
+      console.error("Error in fetchAllData:", error);
+      throw error;
+    }
   };
 
   const handleAuthError = async () => {
@@ -66,7 +158,7 @@ const Logs = () => {
         payload: refreshResponse.data,
       });
 
-      await fetchLogs(refreshResponse.data.access);
+      await fetchAllData(refreshResponse.data.access);
     } catch (refreshError) {
       console.error("Token refresh failed:", refreshError);
       dispatch({ type: "LOGIN_FAIL" });
@@ -83,8 +175,9 @@ const Logs = () => {
       }
 
       try {
-        await fetchLogs(access);
+        await fetchAllData(access);
       } catch (err) {
+        console.error("Fetch error:", err);
         if (err.response?.status === 401) {
           await handleAuthError();
         } else if (err.response?.status === 500) {
@@ -111,19 +204,15 @@ const Logs = () => {
     return () => clearInterval(pollingInterval);
   }, [access, isAuthenticated, dispatch]);
 
-  // Filter logs based on active tab and search term
+  // Filter logs based on active tab and search term - using refs to prevent flickering
   useEffect(() => {
     let filtered = logs;
 
     // Apply tab filter
     if (activeTab === "residents") {
-      filtered = filtered.filter(
-        (log) => log.type === "RESIDENT" || log.type === "Resident"
-      );
+      filtered = filtered.filter((log) => log.type === "RESIDENT");
     } else if (activeTab === "visitors") {
-      filtered = filtered.filter(
-        (log) => log.type === "VISITOR" || log.type === "Visitor"
-      );
+      filtered = filtered.filter((log) => log.type === "VISITOR");
     }
 
     // Apply search filter
@@ -145,15 +234,11 @@ const Logs = () => {
     setCurrentPage(1); // reset to first page when filter changes
   }, [activeTab, logs, searchTerm]);
 
-  // Get counts for each tab
+  // Get counts for each tab - using current logs state
   const getLogCounts = () => {
     const allCount = logs.length;
-    const residentsCount = logs.filter(
-      (log) => log.type === "RESIDENT" || log.type === "Resident"
-    ).length;
-    const visitorsCount = logs.filter(
-      (log) => log.type === "VISITOR" || log.type === "Visitor"
-    ).length;
+    const residentsCount = logs.filter((log) => log.type === "RESIDENT").length;
+    const visitorsCount = logs.filter((log) => log.type === "VISITOR").length;
 
     return { allCount, residentsCount, visitorsCount };
   };
@@ -179,16 +264,29 @@ const Logs = () => {
   };
 
   const formatTimeStamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return {
-      date: date.toISOString().split("T")[0],
-      time: date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }),
-    };
+    if (!timestamp) {
+      return { date: "N/A", time: "N/A" };
+    }
+
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return { date: "Invalid Date", time: "Invalid Time" };
+      }
+
+      return {
+        date: date.toISOString().split("T")[0],
+        time: date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }),
+      };
+    } catch (error) {
+      console.error("Error formatting timestamp:", timestamp, error);
+      return { date: "Error", time: "Error" };
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -291,9 +389,9 @@ const Logs = () => {
                             <div className="time-main">{date}</div>
                             <div className="time-sub">{time}</div>
                           </td>
-                          <td>{log.type}</td>
-                          <td>{log.name}</td>
-                          <td>{log.plate_number}</td>
+                          <td>{log.type || "N/A"}</td>
+                          <td>{log.name || "N/A"}</td>
+                          <td>{log.plate_number || "-"}</td>
                           <td>
                             <span
                               className={`activity-tag ${
@@ -302,10 +400,14 @@ const Logs = () => {
                                   : "exit"
                               }`}
                             >
-                              {log.action}
+                              {log.action || "N/A"}
                             </span>
                           </td>
-                          <td>{log.parking_slot}</td>
+                          <td>
+                            {log.parking_slot === "-"
+                              ? "Not Assigned"
+                              : log.parking_slot || "-"}
+                          </td>
                         </tr>
                       );
                     })}

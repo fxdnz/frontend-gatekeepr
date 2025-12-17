@@ -1,4 +1,4 @@
-// Report.jsx - Updated with proper data mapping and columns
+// Report.jsx - Updated with Logs.jsx working logic
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -12,7 +12,7 @@ import BouncingSpinner from "../components/BouncingSpinner";
 
 const loadExternalScript = (src) =>
   new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src=\"${src}\"]`)) return resolve();
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
     const s = document.createElement("script");
     s.src = src;
     s.onload = resolve;
@@ -30,15 +30,22 @@ const Report = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [pdfGenerating, setPdfGenerating] = useState(false);
-  const [filterLoading, setFilterLoading] = useState(false);
+  const [filteredData, setFilteredData] = useState([]);
+
+  // Use refs to store data like in Logs.jsx
+  const visitorsRef = useRef([]);
+  const logsRef = useRef([]);
+  const visitorParkingMapRef = useRef({});
 
   const reportRef = useRef();
 
   useEffect(() => {
     const fetchData = async () => {
       if (!isAuthenticated) return setError("Please login to view reports");
+
       setLoading(true);
       setError(null);
+
       try {
         const headers = {
           headers: {
@@ -52,49 +59,144 @@ const Report = () => {
           axios.get(API_ENDPOINTS.VISITORS, headers),
         ]);
 
-        // Process access logs
-        setLogs(
-          logsRes.data
-            .map((log) => ({
-              ...log,
-              source: "ACCESS",
-              timestamp: log.timestamp,
-              type: log.type, // RESIDENT or VISITOR
-              full_name: log.name,
-              plate_number: log.plate_number || "-",
-              activity: log.action, // ENTRY or EXIT
-              purpose: log.purpose || "-",
-              parking_slot: log.parking_slot || "-",
-              rfid_uid: log.resident?.rfid_uid_display || "-",
-              first_name:
-                log.resident?.first_name || log.visitor_log?.first_name || "-",
-              last_name:
-                log.resident?.last_name || log.visitor_log?.last_name || "-",
-            }))
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        // Create a map of visitor IDs to their parking slot details (from Logs.jsx)
+        const newVisitorParkingMap = {};
+        visitorsRes.data.forEach((visitor) => {
+          if (visitor.parking_slot_details) {
+            newVisitorParkingMap[visitor.id] =
+              visitor.parking_slot_details.slot_number || "-";
+          }
+        });
+
+        // Update refs with new data (from Logs.jsx)
+        visitorParkingMapRef.current = newVisitorParkingMap;
+        visitorsRef.current = visitorsRes.data;
+
+        // Process logs to extract information (from Logs.jsx)
+        const processedLogs = logsRes.data.map((log) => {
+          let name = "N/A";
+          let plateNumber = "-";
+          let parkingSlot = "-";
+          let first_name = "";
+          let last_name = "";
+
+          // Extract information based on type (from Logs.jsx)
+          if (log.type === "RESIDENT" && log.resident_details) {
+            // Get name from resident_details
+            name =
+              log.resident_details.name ||
+              `${log.resident_details.first_name || ""} ${
+                log.resident_details.last_name || ""
+              }`.trim() ||
+              "Resident";
+
+            first_name = log.resident_details.first_name || "";
+            last_name = log.resident_details.last_name || "";
+
+            // Get plate number from resident_details
+            plateNumber = log.resident_details.plate_number || "-";
+          } else if (log.type === "VISITOR") {
+            // Check if log has visitor_log_details
+            if (log.visitor_log_details) {
+              const visitorId = log.visitor_log_details.id;
+              // Get name from visitor_log_details
+              name =
+                log.visitor_log_details.name ||
+                `${log.visitor_log_details.first_name || ""} ${
+                  log.visitor_log_details.last_name || ""
+                }`.trim() ||
+                "Visitor";
+
+              first_name = log.visitor_log_details.first_name || "";
+              last_name = log.visitor_log_details.last_name || "";
+
+              // Get plate number from visitor_log_details
+              plateNumber = log.visitor_log_details.plate_number || "-";
+
+              // Get parking slot from visitor parking map
+              if (newVisitorParkingMap[visitorId]) {
+                parkingSlot = newVisitorParkingMap[visitorId];
+              }
+            }
+          } else {
+            // Fallback for logs without details
+            name = log.type === "RESIDENT" ? "Resident" : "Visitor";
+          }
+
+          // Get parking slot - check multiple sources in priority order (from Logs.jsx):
+          // 1. First, check if log has parking_details directly
+          if (log.parking_details) {
+            parkingSlot = log.parking_details.slot_number || "-";
+          }
+          // 2. For visitors, if parking still not found and we have visitorId, check map again
+          else if (
+            log.type === "VISITOR" &&
+            log.visitor_log_details &&
+            parkingSlot === "-"
+          ) {
+            const visitorId = log.visitor_log_details.id;
+            if (newVisitorParkingMap[visitorId]) {
+              parkingSlot = newVisitorParkingMap[visitorId];
+            }
+          }
+
+          return {
+            id: log.id,
+            timestamp: log.timestamp,
+            type: log.type || "N/A",
+            full_name: name || "N/A",
+            first_name: first_name,
+            last_name: last_name,
+            plate_number: plateNumber || "-",
+            activity: log.action || "N/A",
+            purpose: log.purpose || "-",
+            parking_slot: parkingSlot || "-",
+            source: "ACCESS_LOG",
+          };
+        });
+
+        // Sort by timestamp (newest first) - like in Logs.jsx
+        const sortedLogs = processedLogs.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
         );
 
-        // Process visitors
-        setVisitors(
-          visitorsRes.data
-            .map((visitor) => ({
-              ...visitor,
-              source: "VISITOR",
-              timestamp: visitor.timestamp,
+        // Update ref and state
+        logsRef.current = sortedLogs;
+        setLogs(sortedLogs);
+
+        // Process visitors like in Logs.jsx format
+        const processedVisitors = visitorsRes.data
+          .map((visitor) => {
+            const visitorName =
+              visitor.name ||
+              `${visitor.first_name || ""} ${visitor.last_name || ""}`.trim() ||
+              "Visitor";
+
+            return {
+              id: visitor.id,
+              timestamp: visitor.timestamp || visitor.created_at,
               type: "VISITOR",
-              full_name: `${visitor.first_name} ${visitor.last_name}`,
+              full_name: visitorName,
+              first_name: visitor.first_name || "",
+              last_name: visitor.last_name || "",
               plate_number: visitor.plate_number || "-",
               activity: "ENTRY", // Visitors typically have entry actions
               purpose: visitor.purpose || "-",
-              parking_slot: visitor.parking_slot?.slot_number || "-",
-              rfid_uid: visitor.rfid?.uid || "-",
-              first_name: visitor.first_name,
-              last_name: visitor.last_name,
-            }))
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+              parking_slot: visitor.parking_slot_details?.slot_number || "-",
+              source: "VISITOR_REGISTRATION",
+            };
+          })
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        setVisitors(processedVisitors);
+
+        // Initial combined data with newest first
+        const combined = [...sortedLogs, ...processedVisitors].sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
         );
+        setFilteredData(combined);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching report data:", err);
         setError("Failed to fetch report data.");
       } finally {
         setLoading(false);
@@ -104,33 +206,78 @@ const Report = () => {
     fetchData();
   }, [access, isAuthenticated]);
 
-  const combined = [...logs, ...visitors].sort(
-    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-  );
+  // Apply filters whenever filter criteria change
+  useEffect(() => {
+    const combined = [...logs, ...visitors].sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    ); // Ensure newest first
 
-  const filtered = combined.filter((item) => {
-    if (filterType !== "ALL" && item.type !== filterType) return false;
-    if (dateFrom && new Date(item.timestamp) < new Date(dateFrom)) return false;
-    if (dateTo && new Date(item.timestamp) > new Date(dateTo + "T23:59:59"))
-      return false;
-    return true;
-  });
+    const filtered = combined.filter((item) => {
+      if (filterType !== "ALL" && item.type !== filterType) return false;
 
-  // Separate lists for rendering
-  const allFiltered = filtered;
-  const visitorsFiltered = filtered.filter((i) => i.type === "VISITOR");
-  const residentsFiltered = filtered.filter((i) => i.type === "RESIDENT");
+      if (!item.timestamp) return true; // Skip date filtering if no timestamp
 
-  const formatTime = (ts) => {
+      const itemDate = new Date(item.timestamp);
+      if (isNaN(itemDate.getTime())) return true; // Skip if invalid date
+
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (itemDate < fromDate) return false;
+      }
+
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (itemDate > toDate) return false;
+      }
+
+      return true;
+    });
+
+    setFilteredData(filtered);
+  }, [logs, visitors, filterType, dateFrom, dateTo]);
+
+  // Format time like in Logs.jsx
+  const formatTime = (timestamp) => {
+    if (!timestamp) {
+      return { date: "N/A", time: "N/A", full: "N/A" };
+    }
+
     try {
-      const d = new Date(ts);
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return {
+          date: "Invalid Date",
+          time: "Invalid Time",
+          full: "Invalid Date",
+        };
+      }
+
+      const formattedDate = date.toLocaleDateString();
+      const formattedTime = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      return {
+        date: formattedDate,
+        time: formattedTime,
+        full: `${formattedDate} ${formattedTime}`,
+      };
     } catch (e) {
-      return ts;
+      console.error("Error formatting timestamp:", timestamp, e);
+      return { date: "Error", time: "Error", full: timestamp };
     }
   };
 
   const generatePDF = async () => {
+    if (filteredData.length === 0) {
+      alert("No data to generate PDF");
+      return;
+    }
+
     setPdfGenerating(true);
     try {
       await loadExternalScript(
@@ -196,18 +343,127 @@ const Report = () => {
     }
   };
 
-  const handleApplyFilters = () => {
-    setFilterLoading(true);
-    // Simulate filter loading
-    setTimeout(() => {
-      setFilterLoading(false);
-    }, 500);
-  };
-
   const handleClearFilters = () => {
     setFilterType("ALL");
     setDateFrom("");
     setDateTo("");
+  };
+
+  // Get filtered data by type for display
+  const getDisplayData = () => {
+    switch (filterType) {
+      case "VISITOR":
+        return filteredData.filter((i) => i.type === "VISITOR");
+      case "RESIDENT":
+        return filteredData.filter((i) => i.type === "RESIDENT");
+      default:
+        return filteredData;
+    }
+  };
+
+  const displayData = getDisplayData();
+
+  const getTableHeaders = () => {
+    switch (filterType) {
+      case "VISITOR":
+        return (
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Full Name</th>
+            <th>Plate Number</th>
+            <th>Activity</th>
+            <th>Purpose</th>
+            <th>Parking Slot</th>
+          </tr>
+        );
+      case "RESIDENT":
+        return (
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Full Name</th>
+            <th>Plate Number</th>
+            <th>Activity</th>
+            <th>Parking Slot</th>
+          </tr>
+        );
+      default:
+        return (
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Full Name</th>
+            <th>Plate Number</th>
+            <th>Activity</th>
+            <th>Purpose</th>
+            <th>Parking Slot</th>
+          </tr>
+        );
+    }
+  };
+
+  const renderTableRows = () => {
+    if (displayData.length === 0) {
+      const colSpan = filterType === "RESIDENT" ? 6 : 7;
+      return (
+        <tr>
+          <td colSpan={colSpan} style={{ textAlign: "center" }}>
+            No records found for the selected filters.
+          </td>
+        </tr>
+      );
+    }
+
+    return displayData.map((row, idx) => {
+      const { full } = formatTime(row.timestamp);
+
+      if (filterType === "RESIDENT") {
+        return (
+          <tr key={row.id || idx}>
+            <td>{full}</td>
+            <td>{row.type}</td>
+            <td>{row.full_name || "N/A"}</td>
+            <td>{row.plate_number || "-"}</td>
+            <td>{row.activity || "-"}</td>
+            <td>
+              {row.parking_slot === "-" || !row.parking_slot
+                ? "Not Assigned"
+                : row.parking_slot}
+            </td>
+          </tr>
+        );
+      } else {
+        return (
+          <tr key={row.id || idx}>
+            <td>{full}</td>
+            <td>{row.type}</td>
+            <td>{row.full_name || "N/A"}</td>
+            <td>{row.plate_number || "-"}</td>
+            <td>{row.activity || "-"}</td>
+            <td>{row.purpose || "-"}</td>
+            <td>
+              {row.parking_slot === "-" || !row.parking_slot
+                ? "Not Assigned"
+                : row.parking_slot}
+            </td>
+          </tr>
+        );
+      }
+    });
+  };
+
+  const getSectionTitle = () => {
+    switch (filterType) {
+      case "ALL":
+        return `All Records (${displayData.length})`;
+      case "VISITOR":
+        return `Visitors (${displayData.length})`;
+      case "RESIDENT":
+        return `Residents (${displayData.length})`;
+      default:
+        return `Records (${displayData.length})`;
+    }
   };
 
   return (
@@ -231,7 +487,9 @@ const Report = () => {
                 <button
                   className="register-button"
                   onClick={generatePDF}
-                  disabled={loading || pdfGenerating}
+                  disabled={
+                    loading || pdfGenerating || displayData.length === 0
+                  }
                 >
                   {pdfGenerating ? (
                     <span className="btn-loading">
@@ -321,140 +579,20 @@ const Report = () => {
                       className="report-logo"
                     />
                   </div>
+                  <div className="report-filters-info">
+                    {filterType !== "ALL" && <span>Type: {filterType}</span>}
+                    {dateFrom && <span>From: {dateFrom}</span>}
+                    {dateTo && <span>To: {dateTo}</span>}
+                  </div>
                 </div>
 
-                {/* Show only the filtered table based on filterType */}
-                {filterType === "ALL" && (
-                  <div className="report-section full-width-table">
-                    <h4 className="section-title">
-                      All Records ({allFiltered.length})
-                    </h4>
-                    <table className="activities-table report-table full-width">
-                      <thead>
-                        <tr>
-                          <th>Timestamp</th>
-                          <th>Type</th>
-                          <th>Full Name</th>
-                          <th>Plate Number</th>
-                          <th>Activity</th>
-                          <th>Purpose</th>
-                          <th>Parking Slot</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allFiltered.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} style={{ textAlign: "center" }}>
-                              No records found for the selected filters.
-                            </td>
-                          </tr>
-                        ) : (
-                          allFiltered.map((row, idx) => (
-                            <tr key={row.id || idx}>
-                              <td>{formatTime(row.timestamp)}</td>
-                              <td>{row.type}</td>
-                              <td>{row.full_name || "N/A"}</td>
-                              <td>{row.plate_number || "-"}</td>
-                              <td>{row.activity || "-"}</td>
-                              <td>{row.purpose || "-"}</td>
-                              <td>{row.parking_slot || "-"}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {filterType === "VISITOR" && (
-                  <div className="report-section full-width-table">
-                    <h4 className="section-title">
-                      Visitors ({visitorsFiltered.length})
-                    </h4>
-                    <table className="activities-table report-table full-width">
-                      <thead>
-                        <tr>
-                          <th>Timestamp</th>
-                          <th>Type</th>
-                          <th>RFID UID</th>
-                          <th>First Name</th>
-                          <th>Last Name</th>
-                          <th>Plate Number</th>
-                          <th>Activity</th>
-                          <th>Purpose</th>
-                          <th>Parking Slot</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visitorsFiltered.length === 0 ? (
-                          <tr>
-                            <td colSpan={9} style={{ textAlign: "center" }}>
-                              No visitor records.
-                            </td>
-                          </tr>
-                        ) : (
-                          visitorsFiltered.map((row, idx) => (
-                            <tr key={row.id || idx}>
-                              <td>{formatTime(row.timestamp)}</td>
-                              <td>{row.type}</td>
-                              <td>{row.rfid_uid || "-"}</td>
-                              <td>{row.first_name || "N/A"}</td>
-                              <td>{row.last_name || "N/A"}</td>
-                              <td>{row.plate_number || "-"}</td>
-                              <td>{row.activity || "-"}</td>
-                              <td>{row.purpose || "-"}</td>
-                              <td>{row.parking_slot || "-"}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {filterType === "RESIDENT" && (
-                  <div className="report-section full-width-table">
-                    <h4 className="section-title">
-                      Residents ({residentsFiltered.length})
-                    </h4>
-                    <table className="activities-table report-table full-width">
-                      <thead>
-                        <tr>
-                          <th>Timestamp</th>
-                          <th>Type</th>
-                          <th>RFID UID</th>
-                          <th>First Name</th>
-                          <th>Last Name</th>
-                          <th>Plate Number</th>
-                          <th>Activity</th>
-                          <th>Parking Slot</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {residentsFiltered.length === 0 ? (
-                          <tr>
-                            <td colSpan={8} style={{ textAlign: "center" }}>
-                              No resident access records.
-                            </td>
-                          </tr>
-                        ) : (
-                          residentsFiltered.map((row, idx) => (
-                            <tr key={row.id || idx}>
-                              <td>{formatTime(row.timestamp)}</td>
-                              <td>{row.type}</td>
-                              <td>{row.rfid_uid || "-"}</td>
-                              <td>{row.first_name || "N/A"}</td>
-                              <td>{row.last_name || "N/A"}</td>
-                              <td>{row.plate_number || "-"}</td>
-                              <td>{row.activity || "-"}</td>
-                              <td>{row.parking_slot || "-"}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                <div className="report-section full-width-table">
+                  <h4 className="section-title">{getSectionTitle()}</h4>
+                  <table className="activities-table report-table full-width">
+                    <thead>{getTableHeaders()}</thead>
+                    <tbody>{renderTableRows()}</tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
