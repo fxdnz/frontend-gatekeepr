@@ -11,10 +11,6 @@ import Header from "../components/Header";
 import "./Home.css";
 import Webcam from "react-webcam";
 
-const GEMINI_API_KEY = "AIzaSyA3Ok39YpzUOfK11SCR6G0NqEWLselT_zE";
-const GEMINI_API_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
 const Home = () => {
   const { access, isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -368,70 +364,33 @@ const Home = () => {
 
   const extractDriverLicenseInfo = async (base64Image, mimeType) => {
     const prompt = `
-    Extract the following information from this Philippine driver's license image: 
-    last_name, first_name, middle_name, sex, home_address, license_number. 
+    Extract the following information from this Philippine driver's license image:
+    last_name, first_name, middle_name, sex, home_address, license_number.
     Return the response in JSON format. No extra text, no markdown.
   `.trim();
 
-    const payload = {
-      contents: [
-        {
-          parts: [
-            {
-              inlineData: {
-                mimeType: mimeType,
-                data: base64Image,
-              },
-            },
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    };
-
     try {
-      const response = await fetch(GEMINI_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": GEMINI_API_KEY,
-        },
-        body: JSON.stringify(payload),
+      // Use the backend proxy to avoid CORS issues
+      const response = await axios.post('http://localhost:8000/api/ocr/', {
+        base64_image: base64Image,
+        mime_type: mimeType
+      }, {
+        headers: getAuthHeaders(access)
       });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(
-          `Gemini API request failed: ${response.statusText} - ${errText}`
-        );
-      }
-
-      const data = await response.json();
-
-      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        const textResponse = data.candidates[0].content.parts[0].text.trim();
-        let cleanText = textResponse
-          .replace(/```json|```/g, "")
-          .replace(/^{|}$/g, "")
-          .trim();
-
-        if (!cleanText.startsWith("{")) {
-          const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            cleanText = jsonMatch[0];
-          }
-        }
-
-        const parsed = JSON.parse(cleanText);
-        return parsed;
-      } else {
-        throw new Error("No recognizable content from Gemini API.");
-      }
+      return response.data;
     } catch (err) {
       console.error("Gemini OCR failed:", err);
-      return { error: err.message };
+
+      // Handle quota exceeded errors specifically
+      const errorMessage = err.response?.data?.error;
+      if (typeof errorMessage === 'string' && (errorMessage.includes("quota") || errorMessage.includes("429"))) {
+        return {
+          error: "OCR service quota exceeded. The free tier has reached its daily limit. Please try again later or use manual entry."
+        };
+      }
+
+      return { error: errorMessage || err.message };
     }
   };
 
@@ -469,15 +428,17 @@ const Home = () => {
       // Format the extracted data
       const formattedData = {
         first_name:
-          extracted.first_name
-            ?.trim()
+          (extracted.first_name || "")
+            .toString()
+            .trim()
             .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
         last_name:
-          extracted.last_name
-            ?.trim()
+          (extracted.last_name || "")
+            .toString()
+            .trim()
             .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-        drivers_license: extracted.license_number?.trim().toUpperCase() || "",
-        address: extracted.home_address?.trim() || "",
+        drivers_license: (extracted.license_number || "").toString().trim().toUpperCase() || "",
+        address: (extracted.home_address || "").toString().trim() || "",
       };
 
       setVisitorForm((prev) => ({
