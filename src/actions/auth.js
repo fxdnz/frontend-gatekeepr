@@ -1,5 +1,5 @@
-// actions/authActions.js
 import axios from "axios";
+import { AUTH_ENDPOINTS, getHeaders } from "../config/api";
 import {
   LOGIN_SUCCESS,
   LOGIN_FAIL,
@@ -14,27 +14,20 @@ import {
   PASSWORD_RESET_FAIL,
   PASSWORD_RESET_SUCCESS,
   PASSWORD_RESET_CONFIRM_FAIL,
-  PASSWORD_RESET_CONFIRM_SUCCESS, // Fixed typo
+  PASSWORD_RESET_CONFIRM_SUCCESS,
   LOGOUT,
 } from "./types";
 
 export const checkAuthenticated = () => async (dispatch) => {
   if (localStorage.getItem("access")) {
     const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: getHeaders(),
     };
 
     const body = JSON.stringify({ token: localStorage.getItem("access") });
 
     try {
-      const res = await axios.post(
-        `https://gatekeepr-backend.onrender.com/auth/jwt/verify/`, // Fixed string interpolation
-        body,
-        config
-      );
+      const res = await axios.post(AUTH_ENDPOINTS.VERIFY, body, config);
 
       if (res.data.code !== "token_not_valid") {
         dispatch({ type: AUTHENTICATED_SUCCESS });
@@ -54,16 +47,13 @@ export const load_user = () => async (dispatch) => {
     const config = {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `JWT ${localStorage.getItem("access")}`, // Fixed string interpolation
+        Authorization: `JWT ${localStorage.getItem("access")}`,
         Accept: "application/json",
       },
     };
 
     try {
-      const res = await axios.get(
-        `https://gatekeepr-backend.onrender.com/auth/users/me/`, // Fixed string interpolation
-        config
-      );
+      const res = await axios.get(AUTH_ENDPOINTS.ME, config);
 
       dispatch({
         type: USER_LOADED_SUCCESS,
@@ -79,19 +69,13 @@ export const load_user = () => async (dispatch) => {
 
 export const login = (email, password) => async (dispatch) => {
   const config = {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
   };
 
   const body = JSON.stringify({ email, password });
 
   try {
-    const res = await axios.post(
-      `https://gatekeepr-backend.onrender.com/auth/jwt/create/`, // Fixed string interpolation
-      body,
-      config
-    );
+    const res = await axios.post(AUTH_ENDPOINTS.CREATE, body, config);
 
     dispatch({
       type: LOGIN_SUCCESS,
@@ -110,19 +94,13 @@ export const login = (email, password) => async (dispatch) => {
 export const signup =
   (name, email, password, re_password) => async (dispatch) => {
     const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(),
     };
 
     const body = JSON.stringify({ name, email, password, re_password });
 
     try {
-      const res = await axios.post(
-        `https://gatekeepr-backend.onrender.com/auth/users/`, // Fixed string interpolation
-        body,
-        config
-      );
+      const res = await axios.post(AUTH_ENDPOINTS.USERS, body, config);
 
       dispatch({
         type: SIGNUP_SUCCESS,
@@ -138,19 +116,13 @@ export const signup =
 
 export const verify = (uid, token) => async (dispatch) => {
   const config = {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
   };
 
   const body = JSON.stringify({ uid, token });
 
   try {
-    const res = await axios.post(
-      `https://gatekeepr-backend.onrender.com/auth/users/activation/`, // Fixed string interpolation
-      body,
-      config
-    );
+    const res = await axios.post(AUTH_ENDPOINTS.ACTIVATE, body, config);
 
     dispatch({
       type: ACTIVATION_SUCCESS,
@@ -165,19 +137,13 @@ export const verify = (uid, token) => async (dispatch) => {
 
 export const reset_password = (email) => async (dispatch) => {
   const config = {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
   };
 
   const body = JSON.stringify({ email });
 
   try {
-    await axios.post(
-      `https://gatekeepr-backend.onrender.com/auth/users/reset_password/`, // Fixed string interpolation
-      body,
-      config
-    );
+    await axios.post(AUTH_ENDPOINTS.RESET_PASSWORD, body, config);
 
     dispatch({
       type: PASSWORD_RESET_SUCCESS,
@@ -192,22 +158,16 @@ export const reset_password = (email) => async (dispatch) => {
 export const reset_password_confirm =
   (uid, token, new_password, re_new_password) => async (dispatch) => {
     const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(),
     };
 
     const body = JSON.stringify({ uid, token, new_password, re_new_password });
 
     try {
-      await axios.post(
-        `https://gatekeepr-backend.onrender.com/auth/users/reset_password_confirm/`, // Fixed string interpolation
-        body,
-        config
-      );
+      await axios.post(AUTH_ENDPOINTS.RESET_PASSWORD_CONFIRM, body, config);
 
       dispatch({
-        type: PASSWORD_RESET_CONFIRM_SUCCESS, // Fixed typo
+        type: PASSWORD_RESET_CONFIRM_SUCCESS,
       });
     } catch (err) {
       dispatch({

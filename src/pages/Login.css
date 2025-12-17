@@ -79,6 +79,7 @@
 
 .form-group {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .form-group label {
@@ -94,7 +95,14 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
-  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #222;
+  box-shadow: 0 0 0 2px rgba(34, 34, 34, 0.1);
 }
 
 .password-input-container {
@@ -110,6 +118,13 @@
   border: none;
   cursor: pointer;
   color: #666;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.password-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .form-footer {
@@ -125,16 +140,34 @@
   gap: 0.5rem;
 }
 
+.remember-me input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #222;
+  cursor: pointer;
+}
+
+.remember-me label {
+  margin: 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
 .forgot-password {
   color: #333;
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  font-size: 0.9rem;
 }
 
 .forgot-password:hover {
   text-decoration: underline;
+  color: #000;
 }
 
-.sign-in-button {
+.auth-button {
   width: 100%;
   padding: 0.75rem;
   background-color: #222;
@@ -144,14 +177,24 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+  height: 48px;
 }
 
-.sign-in-button:hover {
+.auth-button:hover {
   background-color: #000;
 }
 
-.sign-in-button.loading {
+.auth-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.auth-button.loading {
   cursor: not-allowed;
   opacity: 0.8;
 }
@@ -209,14 +252,131 @@ button:disabled {
   font-size: 0.9rem;
 }
 
-.create-account-link {
-  color: #333;
-  font-weight: 500;
-  text-decoration: none;
+/* Form Error Styles - Same as Residents modal */
+.form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(229, 57, 53, 0.2);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.create-account-link:hover {
-  text-decoration: underline;
+.form-error i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+/* Field Error Styles - Same as Residents */
+.field-error {
+  color: #e53935;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 6px 8px;
+  background-color: rgba(229, 57, 53, 0.05);
+  border-radius: 3px;
+  border-left: 3px solid #e53935;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.field-error i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.error-input {
+  border-color: #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.05) !important;
+}
+
+/* Dark mode styles */
+body.dark-mode .login-right {
+  background-color: #121212;
+}
+
+body.dark-mode .welcome-text {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2);
+}
+
+body.dark-mode .password-toggle {
+  color: #aaa;
+}
+
+body.dark-mode .password-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .forgot-password {
+  color: #e0e0e0;
+}
+
+body.dark-mode .forgot-password:hover {
+  color: #fff;
+}
+
+body.dark-mode .create-account p {
+  color: #e0e0e0;
+}
+
+body.dark-mode .auth-button {
+  background-color: #333;
+}
+
+body.dark-mode .auth-button:hover {
+  background-color: #444;
+}
+
+body.dark-mode .auth-button:disabled {
+  background-color: #555;
+}
+
+/* Dark mode checkbox styles */
+body.dark-mode .remember-me input[type="checkbox"] {
+  accent-color: #666;
+}
+
+body.dark-mode .remember-me label {
+  color: #e0e0e0;
+}
+
+/* Dark mode for form errors - Same as Residents */
+body.dark-mode .form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #f44336;
+  border: 1px solid rgba(229, 57, 53, 0.3);
+}
+
+body.dark-mode .field-error {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left-color: #f44336;
+}
+
+body.dark-mode .error-input {
+  border-color: #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.1) !important;
 }
 
 @media (max-width: 768px) {

@@ -1,5 +1,5 @@
-.residents-container {
-  margin-top: 63px;
+.createusers-container {
+  margin-top: 80px;
   background-color: white;
   border-radius: 9px;
   padding: 35px 50px 50px 50px;
@@ -9,27 +9,33 @@
   flex-direction: column;
 }
 
-.residents-header {
+.createusers-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.residents-title {
+.createusers-title {
   display: flex;
   align-items: center;
   gap: 9px;
 }
 
-.residents-container h2 {
+.createusers-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.createusers-container h2 {
   font-size: 18px;
   font-weight: 600;
   color: #333;
   margin: 0;
 }
 
-.register-button {
+.createusers-register-button {
   background-color: #00c07f;
   color: white;
   border: none;
@@ -44,26 +50,26 @@
   transition: background-color 0.2s;
 }
 
-.register-button:hover {
+.createusers-register-button:hover {
   background-color: #00a86b;
 }
 
 /* Search bar styles */
-.search-bar {
+.createusers-search-bar {
   position: relative;
   display: flex;
   align-items: center;
   margin-right: 5rem;
 }
 
-.search-bar i {
+.createusers-search-bar i {
   position: absolute;
   left: 12px;
   color: #666;
   font-size: 14px;
 }
 
-.search-input {
+.createusers-search-input {
   padding: 9px 12px 9px 36px;
   border: 1px solid #ddd;
   border-radius: 99px;
@@ -73,18 +79,18 @@
   transition: border-color 0.2s;
 }
 
-.search-input:focus {
+.createusers-search-input:focus {
   outline: none;
   border-color: #00c07f;
 }
 
-.residents-table {
+.createusers-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.residents-table th {
+.createusers-table th {
   text-align: left;
   padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
@@ -92,26 +98,26 @@
   font-weight: 500;
 }
 
-.residents-table td {
+.createusers-table td {
   padding: 13.5px;
   border-bottom: 1px solid #eaeaea;
   color: #333;
 }
 
-.loading,
-.error,
-.no-data {
+.createusers-loading,
+.createusers-error,
+.createusers-no-data {
   padding: 18px;
   text-align: center;
   color: #666;
 }
 
-.error {
+.createusers-error {
   color: #e53935;
 }
 
 /* Modal styles */
-.modal-overlay {
+.createusers-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -125,7 +131,7 @@
   backdrop-filter: blur(4.5px);
 }
 
-.modal-content {
+.createusers-modal-content {
   background-color: white;
   border-radius: 9px;
   padding: 18px;
@@ -136,20 +142,20 @@
   overflow-y: auto;
 }
 
-.modal-header {
+.createusers-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
 }
 
-.modal-title {
+.createusers-modal-title {
   display: flex;
   align-items: center;
   gap: 9px;
 }
 
-.modal-title h2 {
+.createusers-modal-title h2 {
   font-size: 16px;
   font-weight: 600;
   color: #00a86b;
@@ -157,7 +163,7 @@
   margin-bottom: 5px;
 }
 
-.close-button {
+.createusers-close-button {
   background: none;
   border: none;
   font-size: 16.2px;
@@ -165,7 +171,7 @@
   cursor: pointer;
 }
 
-.form-group label {
+.createusers-form-group label {
   display: block;
   margin-bottom: 7.2px;
   font-weight: 500;
@@ -173,7 +179,7 @@
   text-transform: none;
 }
 
-.form-group input {
+.createusers-form-group input {
   width: 100%;
   padding: 9px;
   border: 1px solid #ddd;
@@ -182,16 +188,16 @@
   box-sizing: border-box;
 }
 
-.green-icon {
+.createusers-green-icon {
   color: #00c07f;
   margin-left: 0.9rem;
 }
 
-.users-green {
+.createusers-users-green {
   color: #00c07f;
 }
 
-.form-error {
+.createusers-form-error {
   background-color: rgba(229, 57, 53, 0.1);
   color: #e53935;
   padding: 9px;
@@ -200,16 +206,16 @@
   border: 1px solid rgba(229, 57, 53, 0.2);
 }
 
-.form-error ul {
+.createusers-form-error ul {
   margin: 7.2px 0 0 0;
   padding-left: 18px;
 }
 
-.form-error li {
+.createusers-form-error li {
   margin-bottom: 3.6px;
 }
 
-.form-success {
+.createusers-form-success {
   background-color: rgba(0, 192, 127, 0.1);
   color: #00c07f;
   padding: 9px;
@@ -219,26 +225,26 @@
 }
 
 /* Delete confirmation modal */
-.delete-modal {
+.createusers-delete-modal {
   max-width: 400px;
 }
 
-.warning-icon {
+.createusers-warning-icon {
   color: #ff9800;
   font-size: 18px;
 }
 
-.delete-message {
+.createusers-delete-message {
   margin-bottom: 18px;
   line-height: 1.5;
   color: #333;
 }
 
-.delete-message p {
+.createusers-delete-message p {
   margin-bottom: 12px;
 }
 
-.delete-warning {
+.createusers-delete-warning {
   background-color: rgba(33, 150, 243, 0.1);
   border: 1px solid rgba(33, 150, 243, 0.2);
   border-radius: 4px;
@@ -248,24 +254,24 @@
   align-items: flex-start;
 }
 
-.delete-warning i {
+.createusers-delete-warning i {
   color: #2196f3;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
-.delete-warning span {
+.createusers-delete-warning span {
   font-size: 13px;
   line-height: 1.4;
   color: #1565c0;
 }
 
-.delete-actions {
+.createusers-delete-actions {
   display: flex;
   gap: 9px;
 }
 
-.delete-confirm-button {
+.createusers-delete-confirm-button {
   background-color: #e53935;
   color: white;
   border: none;
@@ -278,11 +284,11 @@
   transition: background-color 0.2s;
 }
 
-.delete-confirm-button:hover {
+.createusers-delete-confirm-button:hover {
   background-color: #c62828;
 }
 
-.delete-cancel-button {
+.createusers-delete-cancel-button {
   background-color: #f5f5f5;
   color: #333;
   border: none;
@@ -295,19 +301,19 @@
   transition: background-color 0.2s;
 }
 
-.delete-cancel-button:hover {
+.createusers-delete-cancel-button:hover {
   background-color: #e0e0e0;
 }
 
 /* Pagination controls */
-.pagination-controls {
+.createusers-pagination-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
 }
 
-.pagination-main {
+.createusers-pagination-main {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -315,14 +321,14 @@
   flex: 1;
 }
 
-.resident-count {
+.createusers-user-count {
   font-size: 12.6px;
   color: #666;
   font-weight: 500;
   margin-left: auto;
 }
 
-.pagination-button {
+.createusers-pagination-button {
   background-color: #00c07f;
   color: white;
   border: none;
@@ -339,45 +345,45 @@
   width: 6rem;
 }
 
-.pagination-button:hover:not(:disabled) {
+.createusers-pagination-button:hover:not(:disabled) {
   background-color: #00a86b;
 }
 
-.pagination-button:disabled {
+.createusers-pagination-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
 
-.pagination-info {
+.createusers-pagination-info {
   font-size: 12.6px;
   color: #666;
   font-weight: 500;
 }
 
 /* Modal Form Layout */
-.modal-form {
+.createusers-modal-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.form-row {
+.createusers-form-row {
   display: flex;
   gap: 18px;
 }
 
-.form-row .form-group {
+.createusers-form-row .createusers-form-group {
   flex: 1;
   margin-bottom: 0;
 }
 
-.form-group-full {
+.createusers-form-group-full {
   width: 100%;
   margin-bottom: 0;
 }
 
 /* Dropdown styling */
-.form-group select {
+.createusers-form-group select {
   width: 100%;
   padding: 9px;
   border: 1px solid #ddd;
@@ -393,19 +399,19 @@
   background-size: 8px 10px;
 }
 
-.form-group select:focus {
+.createusers-form-group select:focus {
   outline: none;
   border-color: #00c07f;
 }
 
 /* Input error styling */
-.error-input {
+.createusers-error-input {
   border-color: #e53935 !important;
   background-color: rgba(229, 57, 53, 0.05) !important;
 }
 
 /* Updated Form actions */
-.form-actions {
+.createusers-form-actions {
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -413,13 +419,13 @@
 }
 
 /* Form buttons row in modal */
-.form-buttons-row {
+.createusers-form-buttons-row {
   display: flex;
   gap: 12px;
   width: 100%;
 }
 
-.update-modal-button {
+.createusers-update-modal-button {
   background-color: #00a86a1f;
   color: #666;
   border: 1px solid #00a86b;
@@ -432,19 +438,19 @@
   transition: background-color 0.2s;
 }
 
-.update-modal-button:hover:not(:disabled) {
+.createusers-update-modal-button:hover:not(:disabled) {
   background-color: #00a86b;
   color: white;
   border-color: #00a86b;
 }
 
-.update-modal-button:disabled {
+.createusers-update-modal-button:disabled {
   background-color: #00a86b;
   cursor: not-allowed;
   color: #ccc;
 }
 
-.delete-modal-button {
+.createusers-delete-modal-button {
   background-color: #f5f5f5;
   color: #666;
   border: 1px solid #ddd;
@@ -457,20 +463,20 @@
   transition: all 0.2s;
 }
 
-.delete-modal-button:hover:not(:disabled) {
+.createusers-delete-modal-button:hover:not(:disabled) {
   background-color: #e53935;
   color: white;
   border-color: #e53935;
 }
 
-.delete-modal-button:disabled {
+.createusers-delete-modal-button:disabled {
   background-color: #f5f5f5;
   color: #ccc;
   cursor: not-allowed;
 }
 
 /* Three-dot update button in table */
-.update-dot-button {
+.createusers-update-dot-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -483,187 +489,92 @@
   font-size: 16px;
 }
 
-.update-dot-button:hover {
+.createusers-update-dot-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Dark mode styles */
-body.dark-mode .residents-container {
-  background-color: #1e1e1e;
-  color: #e0e0e0;
+/* Status badge */
+.createusers-status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-body.dark-mode .residents-container h2,
-body.dark-mode .modal-title h2 {
-  color: #00a86b;
+.createusers-status-badge.active {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
 }
 
-body.dark-mode .residents-table th {
-  color: #aaa;
-  border-color: #333;
+.createusers-status-badge.inactive {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
 }
 
-body.dark-mode .residents-table td {
-  color: #e0e0e0;
-  border-color: #333;
+/* Password header */
+.createusers-password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7.2px;
 }
 
-body.dark-mode .modal-content {
-  background-color: #1e1e1e;
+.createusers-generate-password-button {
+  background: none;
+  border: 1px solid #00c07f;
+  color: #00c07f;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
 }
 
-body.dark-mode .form-group label {
-  color: #e0e0e0;
-}
-
-body.dark-mode .form-group input {
-  background-color: #2a2a2a;
-  border-color: #333;
-  color: #e0e0e0;
-}
-
-body.dark-mode .close-button {
-  color: #aaa;
-}
-
-body.dark-mode .loading,
-body.dark-mode .no-data {
-  color: #aaa;
-}
-
-body.dark-mode .error {
-  color: #f44336;
-}
-
-body.dark-mode .delete-message {
-  color: #e0e0e0;
-}
-
-body.dark-mode .delete-cancel-button {
-  background-color: #2a2a2a;
-  color: #e0e0e0;
-}
-
-body.dark-mode .delete-cancel-button:hover {
-  background-color: #333;
-}
-
-body.dark-mode .modal-content {
-  background-color: #1e1e1e;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .pagination-controls {
-  border-top-color: #333;
-}
-
-body.dark-mode .pagination-info {
-  color: #aaa;
-}
-
-body.dark-mode .pagination-button:disabled {
-  background-color: #444;
-}
-
-body.dark-mode .form-group select {
-  background-color: #2a2a2a;
-  border-color: #333;
-  color: #e0e0e0;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23aaa' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
-}
-
-body.dark-mode .form-group select:focus {
-  border-color: #00c07f;
-}
-
-body.dark-mode .error-input {
-  border-color: #e53935 !important;
-  background-color: rgba(229, 57, 53, 0.1) !important;
-}
-
-/* Dark mode styles for new buttons */
-body.dark-mode .update-dot-button {
-  color: #aaa;
-}
-
-body.dark-mode .update-dot-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-body.dark-mode .update-modal-button {
-  background-color: #2a2a2a;
-  color: #aaa;
-  border-color: #444;
-}
-
-body.dark-mode .update-modal-button:hover:not(:disabled) {
-  background-color: #00a86a3b;
+.createusers-generate-password-button:hover {
+  background-color: #00c07f;
   color: white;
-  border-color: #00a86b;
 }
 
-body.dark-mode .delete-modal-button {
-  background-color: #2a2a2a;
-  color: #aaa;
-  border-color: #444;
-}
-
-body.dark-mode .delete-modal-button:hover:not(:disabled) {
-  background-color: #e538354b;
-  color: white;
-  border-color: #e53935;
-}
-
-body.dark-mode .delete-warning {
-  background-color: rgba(33, 150, 243, 0.1);
-  border-color: rgba(33, 150, 243, 0.3);
-}
-
-body.dark-mode .delete-warning span {
-  color: #4fc3f7;
-}
-
-/* Dark mode styles for search */
-body.dark-mode .search-input {
-  background-color: #2a2a2a;
-  border-color: #333;
-  color: #e0e0e0;
-}
-
-body.dark-mode .search-bar i {
-  color: #aaa;
+.createusers-password-hint {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
 }
 
 /* Spinner styles */
-.spinner {
+.createusers-spinner {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 3px;
 }
 
-.spinner.white div {
+.createusers-spinner.white div {
   background-color: white;
 }
 
-.spinner div {
+.createusers-spinner div {
   width: 6px;
   height: 6px;
   background-color: #333;
   border-radius: 100%;
   display: inline-block;
-  animation: bouncedelay 1.4s infinite ease-in-out both;
+  animation: createusers-bouncedelay 1.4s infinite ease-in-out both;
 }
 
-.spinner .bounce1 {
+.createusers-spinner .createusers-bounce1 {
   animation-delay: -0.32s;
 }
 
-.spinner .bounce2 {
+.createusers-spinner .createusers-bounce2 {
   animation-delay: -0.16s;
 }
 
-@keyframes bouncedelay {
+@keyframes createusers-bouncedelay {
   0%,
   80%,
   100% {
@@ -675,7 +586,7 @@ body.dark-mode .search-bar i {
 }
 
 /* Login required styles */
-.login-required {
+.createusers-login-required {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -684,7 +595,7 @@ body.dark-mode .search-bar i {
   text-align: center;
 }
 
-.login-button {
+.createusers-login-button {
   background-color: #00c07f;
   color: white;
   padding: 12px 24px;
@@ -695,172 +606,12 @@ body.dark-mode .search-bar i {
   transition: background-color 0.2s;
 }
 
-.login-button:hover {
+.createusers-login-button:hover {
   background-color: #00a86b;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .residents-actions {
-    flex-direction: column;
-    gap: 9px;
-    width: 100%;
-  }
-
-  .search-bar {
-    width: 100%;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .register-button {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-row {
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .modal-content {
-    margin: 18px;
-    max-width: calc(100% - 36px);
-  }
-
-  .residents-header {
-    flex-direction: column;
-    gap: 13.5px;
-    align-items: flex-start;
-  }
-
-  .residents-actions {
-    width: 100%;
-  }
-
-  .pagination-controls {
-    flex-direction: column;
-    gap: 9px;
-  }
-
-  .pagination-info {
-    order: -1;
-  }
-
-  .form-buttons-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .update-modal-button,
-  .delete-modal-button {
-    flex: 1;
-  }
-}
-
-/* Ensure form-group styles apply to all form groups */
-.form-group label,
-.form-group-full label {
-  display: block;
-  margin-bottom: 7.2px;
-  font-weight: 500;
-  color: #333;
-  text-transform: none;
-}
-
-.form-group input,
-.form-group-full input,
-.form-group select,
-.form-group-full select {
-  width: 100%;
-  padding: 9px;
-  border: 1px solid #ddd;
-  border-radius: 4.5px;
-  font-size: 14px;
-  box-sizing: border-box;
-  background-color: white;
-}
-
-.form-group input:focus,
-.form-group-full input:focus,
-.form-group select:focus,
-.form-group-full select:focus {
-  outline: none;
-  border-color: #00c07f;
-}
-
-/* Remove margin-bottom for form-row children */
-.form-row .form-group,
-.form-row .form-group-full {
-  margin-bottom: 0;
-}
-
-/* Table row hover and clickable styles */
-.residents-table tbody tr {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.residents-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.residents-table tbody tr:active {
-  background-color: #e9ecef;
-}
-
-/* Action buttons cell - prevent row click on button click */
-.action-buttons {
-  cursor: default;
-}
-
-.action-buttons .update-dot-button {
-  cursor: pointer;
-}
-
-/* Dark mode styles for table rows */
-body.dark-mode .residents-table tbody tr:hover {
-  background-color: #2a2a2a;
-}
-
-body.dark-mode .residents-table tbody tr:active {
-  background-color: #333;
-}
-
-/* Enhanced table row styles */
-.clickable-row {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.clickable-row:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.clickable-row:active {
-  background-color: #e9ecef;
-  transform: translateY(0);
-}
-
-/* Dark mode styles for enhanced rows */
-body.dark-mode .clickable-row:hover {
-  background-color: #2a2a2a;
-  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .clickable-row:active {
-  background-color: #333;
-}
-
-/* Field Error Styles - Add this section */
-.field-error {
+/* Field Error Styles */
+.createusers-field-error {
   color: #e53935;
   font-size: 12px;
   margin-top: 5px;
@@ -870,19 +621,344 @@ body.dark-mode .clickable-row:active {
   border-left: 3px solid #e53935;
 }
 
-.error-input {
+/* Table row hover and clickable styles */
+.createusers-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.createusers-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.createusers-table tbody tr:active {
+  background-color: #e9ecef;
+}
+
+/* Action buttons cell - prevent row click on button click */
+.createusers-action-buttons {
+  cursor: default;
+}
+
+.createusers-action-buttons .createusers-update-dot-button {
+  cursor: pointer;
+}
+
+/* Enhanced table row styles */
+.createusers-clickable-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.createusers-clickable-row:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createusers-clickable-row:active {
+  background-color: #e9ecef;
+  transform: translateY(0);
+}
+
+/* Dark mode styles */
+body.dark-mode .createusers-container {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-container h2,
+body.dark-mode .createusers-modal-title h2 {
+  color: #00a86b;
+}
+
+body.dark-mode .createusers-table th {
+  color: #aaa;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-table td {
+  color: #e0e0e0;
+  border-color: #333;
+}
+
+body.dark-mode .createusers-modal-content {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .createusers-form-group label {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-form-group input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-close-button {
+  color: #aaa;
+}
+
+body.dark-mode .createusers-loading,
+body.dark-mode .createusers-no-data {
+  color: #aaa;
+}
+
+body.dark-mode .createusers-error {
+  color: #f44336;
+}
+
+body.dark-mode .createusers-delete-message {
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-delete-cancel-button {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-delete-cancel-button:hover {
+  background-color: #333;
+}
+
+body.dark-mode .createusers-modal-content {
+  background-color: #1e1e1e;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .createusers-pagination-controls {
+  border-top-color: #333;
+}
+
+body.dark-mode .createusers-pagination-info {
+  color: #aaa;
+}
+
+body.dark-mode .createusers-pagination-button:disabled {
+  background-color: #444;
+}
+
+body.dark-mode .createusers-form-group select {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23aaa' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+}
+
+body.dark-mode .createusers-form-group select:focus {
+  border-color: #00c07f;
+}
+
+body.dark-mode .createusers-error-input {
   border-color: #e53935 !important;
-  background-color: rgba(229, 57, 53, 0.05) !important;
+  background-color: rgba(229, 57, 53, 0.1) !important;
+}
+
+/* Dark mode styles for new buttons */
+body.dark-mode .createusers-update-dot-button {
+  color: #aaa;
+}
+
+body.dark-mode .createusers-update-dot-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-mode .createusers-update-modal-button {
+  background-color: #2a2a2a;
+  color: #aaa;
+  border-color: #444;
+}
+
+body.dark-mode .createusers-update-modal-button:hover:not(:disabled) {
+  background-color: #00a86a3b;
+  color: white;
+  border-color: #00a86b;
+}
+
+body.dark-mode .createusers-delete-modal-button {
+  background-color: #2a2a2a;
+  color: #aaa;
+  border-color: #444;
+}
+
+body.dark-mode .createusers-delete-modal-button:hover:not(:disabled) {
+  background-color: #e538354b;
+  color: white;
+  border-color: #e53935;
+}
+
+body.dark-mode .createusers-delete-warning {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+body.dark-mode .createusers-delete-warning span {
+  color: #4fc3f7;
+}
+
+/* Dark mode styles for search */
+body.dark-mode .createusers-search-input {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .createusers-search-bar i {
+  color: #aaa;
 }
 
 /* Dark mode for field errors */
-body.dark-mode .field-error {
+body.dark-mode .createusers-field-error {
   color: #f44336;
   background-color: rgba(244, 67, 54, 0.1);
   border-left-color: #f44336;
 }
 
-body.dark-mode .error-input {
-  border-color: #e53935 !important;
-  background-color: rgba(229, 57, 53, 0.1) !important;
+/* Dark mode styles for table rows */
+body.dark-mode .createusers-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+body.dark-mode .createusers-table tbody tr:active {
+  background-color: #333;
+}
+
+body.dark-mode .createusers-clickable-row:hover {
+  background-color: #2a2a2a;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .createusers-clickable-row:active {
+  background-color: #333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .createusers-actions {
+    flex-direction: column;
+    gap: 9px;
+    width: 100%;
+  }
+
+  .createusers-search-bar {
+    width: 100%;
+  }
+
+  .createusers-search-input {
+    width: 100%;
+  }
+
+  .createusers-register-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .createusers-form-row {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .createusers-modal-content {
+    margin: 18px;
+    max-width: calc(100% - 36px);
+  }
+
+  .createusers-header {
+    flex-direction: column;
+    gap: 13.5px;
+    align-items: flex-start;
+  }
+
+  .createusers-actions {
+    width: 100%;
+  }
+
+  .createusers-pagination-controls {
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .createusers-pagination-info {
+    order: -1;
+  }
+
+  .createusers-form-buttons-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .createusers-update-modal-button,
+  .createusers-delete-modal-button {
+    flex: 1;
+  }
+}
+
+/* Ensure form-group styles apply to all form groups */
+.createusers-form-group label,
+.createusers-form-group-full label {
+  display: block;
+  margin-bottom: 7.2px;
+  font-weight: 500;
+  color: #333;
+  text-transform: none;
+}
+
+.createusers-form-group input,
+.createusers-form-group-full input,
+.createusers-form-group select,
+.createusers-form-group-full select {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 4.5px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.createusers-form-group input:focus,
+.createusers-form-group-full input:focus,
+.createusers-form-group select:focus,
+.createusers-form-group-full select:focus {
+  outline: none;
+  border-color: #00c07f;
+}
+
+/* Remove margin-bottom for form-row children */
+.createusers-form-row .createusers-form-group,
+.createusers-form-row .createusers-form-group-full {
+  margin-bottom: 0;
+}
+
+.createusers-dashboard-container {
+  display: flex;
+}
+
+.createusers-dashboard-content {
+  flex: 1;
+  width: 100%;
+}
+
+.createusers-dashboard-main {
+  padding: 18px 27px 27px 243px;
+}
+
+.createusers-dashboard-main.no-top-padding {
+  padding-top: 0;
+}
+
+.createusers-email-note {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Dark mode for email note */
+body.dark-mode .createusers-email-note {
+  color: #aaa;
 }

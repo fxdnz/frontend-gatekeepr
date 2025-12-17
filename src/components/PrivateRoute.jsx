@@ -5,8 +5,8 @@ import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
 import BouncingSpinner from "./BouncingSpinner";
 
-const PrivateRoute = ({ children }) => {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+const PrivateRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
 
@@ -37,7 +37,12 @@ const PrivateRoute = ({ children }) => {
 
   // If not authenticated, redirect to login with the current path in state
   if (isAuthenticated === false) {
-    return <Navigate to="/login" state={{ from: location.pathname }} />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  // If allowedRoles is provided, check user role
+  if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
+    return <Navigate to="/403" replace />;
   }
 
   return children;

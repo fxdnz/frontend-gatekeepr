@@ -6,9 +6,25 @@ body {
   box-sizing: border-box;
   background-color: #f9fafb;
   color: #333;
+  font-size: 15px;
+}
+
+/* Adding explicit font-family to button and input elements to override browser defaults */
+button,
+input,
+textarea,
+select {
+  font-family: "Outfit", sans-serif;
 }
 
 a {
   text-decoration: none;
   color: inherit;
+}
+
+i,
+i::before,
+i::after {
+  margin: 0 !important;
+  padding: 0 !important;
 }

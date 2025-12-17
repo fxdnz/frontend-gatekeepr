@@ -87,6 +87,7 @@
 
 .form-group {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .form-group label {
@@ -165,23 +166,41 @@
   text-decoration: underline;
 }
 
-.auth-message {
-  padding: 1rem;
+/* Form Error Styles - Same as Residents modal */
+.form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  padding: 12px;
   border-radius: 4px;
   margin-bottom: 1.5rem;
+  border: 1px solid rgba(229, 57, 53, 0.2);
   font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.form-error i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
 }
 
 .auth-success {
   background-color: rgba(0, 192, 127, 0.1);
   color: #00c07f;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
   border: 1px solid rgba(0, 192, 127, 0.2);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.auth-error {
-  background-color: rgba(229, 57, 53, 0.1);
-  color: #e53935;
-  border: 1px solid rgba(229, 57, 53, 0.2);
+.auth-success i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
 }
 
 .password-strength {
@@ -243,6 +262,31 @@
   color: #e53935;
 }
 
+/* Field Error Styles - Same as Residents */
+.field-error {
+  color: #e53935;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 6px 8px;
+  background-color: rgba(229, 57, 53, 0.05);
+  border-radius: 3px;
+  border-left: 3px solid #e53935;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.field-error i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.error-input {
+  border-color: #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.05) !important;
+}
+
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
@@ -295,4 +339,28 @@ body.dark-mode .auth-button:hover {
 
 body.dark-mode .auth-button:disabled {
   background-color: #555;
+}
+
+/* Dark mode for form errors - Same as Residents */
+body.dark-mode .form-error {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #f44336;
+  border: 1px solid rgba(229, 57, 53, 0.3);
+}
+
+body.dark-mode .auth-success {
+  background-color: rgba(0, 192, 127, 0.1);
+  color: #00c07f;
+  border: 1px solid rgba(0, 192, 127, 0.3);
+}
+
+body.dark-mode .field-error {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left-color: #f44336;
+}
+
+body.dark-mode .error-input {
+  border-color: #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.1) !important;
 }

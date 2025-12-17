@@ -11,6 +11,7 @@ const Sidebar = ({
   isAuthenticated,
   checkAuthenticated,
   load_user,
+  user,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -56,9 +57,21 @@ const Sidebar = ({
     }
   }, [checkingAuth, isAuthenticated, navigate, location.pathname]);
 
+  // Helper function to check if user can access a route based on role
+  const canAccess = (allowedRoles) => {
+    if (!user || !user.role) return false;
+    return allowedRoles.includes(user.role);
+  };
+
+  // Permission checks for cleaner code
+  const isSystemAdmin = user?.role === "system_admin";
+  const isUserAdmin = user?.role === "user_admin";
+  const isPersonnel = user?.role === "personnel";
+
   return (
     <div className="sidebar">
-      <div className="sidebar-header">
+      {/* Make the sidebar-header clickable and redirect to home */}
+      <Link to="/" className="sidebar-header">
         <img
           src={
             darkMode ? "/gatekeepr-logo-white.png" : "/gatekeepr-logo-black.png"
@@ -66,9 +79,10 @@ const Sidebar = ({
           alt="gatekeepr"
           className="sidebar-logo"
         />
-      </div>
+      </Link>
 
       <div className="sidebar-menu">
+        {/* Dashboard - accessible to all roles */}
         <Link
           to="/"
           className={`sidebar-item ${
@@ -81,6 +95,7 @@ const Sidebar = ({
           <span>Dashboard</span>
         </Link>
 
+        {/* Logs - accessible to all roles */}
         <Link
           to="/logs"
           className={`sidebar-item ${
@@ -93,17 +108,106 @@ const Sidebar = ({
           <span>Logs</span>
         </Link>
 
+        {/* Residents - only for system_admin and user_admin */}
+        {canAccess(["system_admin", "user_admin"]) && (
+          <Link
+            to="/residents"
+            className={`sidebar-item ${
+              location.pathname === "/residents" ? "active" : ""
+            }`}
+          >
+            <div className="sidebar-icon">
+              <i className="fas fa-users"></i>
+            </div>
+            <span>Residents</span>
+          </Link>
+        )}
+
+        {/* Visitors - accessible to all roles */}
         <Link
-          to="/residents"
+          to="/visitors"
           className={`sidebar-item ${
-            location.pathname === "/residents" ? "active" : ""
+            location.pathname === "/visitors" ? "active" : ""
           }`}
         >
           <div className="sidebar-icon">
-            <i className="fas fa-users"></i>
+            <i className="fas fa-user-friends"></i>
           </div>
-          <span>Residents</span>
+          <span>Visitors</span>
         </Link>
+
+        {/* Create Users - only for system_admin and user_admin */}
+        {canAccess(["system_admin", "user_admin"]) && (
+          <Link
+            to="/create-users"
+            className={`sidebar-item ${
+              location.pathname === "/create-users" ? "active" : ""
+            }`}
+          >
+            <div className="sidebar-icon">
+              <i className="fas fa-user-plus"></i>
+            </div>
+            <span>Create Users</span>
+          </Link>
+        )}
+
+        {/* RFID - only for system_admin and user_admin */}
+        {canAccess(["system_admin", "user_admin"]) && (
+          <Link
+            to="/rfid"
+            className={`sidebar-item ${
+              location.pathname === "/rfid" ? "active" : ""
+            }`}
+          >
+            <div className="sidebar-icon">
+              <i className="fas fa-microchip"></i>
+            </div>
+            <span>RFID</span>
+          </Link>
+        )}
+
+        {/* Reports - only for system_admin and user_admin */}
+        {canAccess(["system_admin", "user_admin"]) && (
+          <Link
+            to="/reports"
+            className={`sidebar-item ${
+              location.pathname === "/reports" ? "active" : ""
+            }`}
+          >
+            <div className="sidebar-icon">
+              <i className="fas fa-file-pdf"></i>
+            </div>
+            <span>Reports</span>
+          </Link>
+        )}
+
+        {/* Parking - accessible to all roles */}
+        <Link
+          to="/parking"
+          className={`sidebar-item ${
+            location.pathname === "/parking" ? "active" : ""
+          }`}
+        >
+          <div className="sidebar-icon">
+            <i className="fas fa-car"></i>
+          </div>
+          <span>Parking</span>
+        </Link>
+
+        {/* Settings - only for system_admin */}
+        {canAccess(["system_admin"]) && (
+          <Link
+            to="/settings"
+            className={`sidebar-item ${
+              location.pathname === "/settings" ? "active" : ""
+            }`}
+          >
+            <div className="sidebar-icon">
+              <i className="fas fa-cog"></i>
+            </div>
+            <span>Settings</span>
+          </Link>
+        )}
       </div>
 
       <div className="sidebar-footer">
@@ -120,6 +224,7 @@ const Sidebar = ({
 
 const mapStateToProps = (state) => ({
   isAuthenticated: state.auth.isAuthenticated,
+  user: state.auth.user,
 });
 
 export default connect(mapStateToProps, {

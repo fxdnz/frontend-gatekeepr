@@ -1,21 +1,25 @@
 /* Header Styles */
 .header {
-  height: 70px;
+  height: 63px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 30px;
-  margin-bottom: 1.5rem;
+  padding: 0 27px;
   background-color: white;
   border-bottom: 1px solid #eaeaea;
-  margin-left: 1.9rem;
-  margin-right: 1.9rem;
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Soft float shadow */
+  /* Make header fixed and floating like sidebar */
+  position: fixed;
+  top: 0;
+  left: 15.11rem;
+  right: 1.6rem;
+  z-index: 100;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 
 .header-title {
-  font-size: 24px;
+  font-size: 21.6px;
   font-weight: 600;
   color: #333;
 }
@@ -27,12 +31,12 @@
 }
 
 .date {
-  font-size: 14px;
+  font-size: 12.6px;
   color: #666;
 }
 
 .time {
-  font-size: 16px;
+  font-size: 14.4px;
   font-weight: 500;
   color: #333;
 }
@@ -40,13 +44,13 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
 /* Dark Mode Toggle Styles */
 .theme-toggle {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -71,9 +75,8 @@
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 6px 12px;
+  gap: 10.8px;
+  padding: 5.4px 10.8px;
   border-radius: 6px;
   transition: background-color 0.2s ease;
 }
@@ -83,19 +86,19 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #e0e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #555;
-  font-size: 18px;
+  font-size: 16.2px;
 }
 
 .user-icon {
-  font-size: 18px;
+  font-size: 16.2px;
 }
 
 /* If using image avatars */
@@ -113,18 +116,18 @@
 }
 
 .user-name {
-  font-size: 14px;
+  font-size: 12.6px;
   font-weight: 600;
   color: #333;
 }
 
 .user-role {
-  font-size: 12px;
+  font-size: 10.8px;
   color: #777;
 }
 
 .dropdown-icon {
-  font-size: 12px;
+  font-size: 10.8px;
   color: #aaa;
 }
 
@@ -134,7 +137,13 @@ body.dark-mode .theme-toggle {
   color: #fff;
 }
 
-body.dark-mode .header,
+body.dark-mode .header {
+  /* White glow like modal */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #1e1e1e;
+  border-color: #333;
+}
+
 body.dark-mode .sidebar,
 body.dark-mode .recent-activities {
   background-color: #1e1e1e;
