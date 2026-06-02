@@ -371,12 +371,16 @@ const Home = () => {
 
     try {
       // Use the backend proxy to avoid CORS issues
-      const response = await axios.post('http://localhost:8000/api/ocr/', {
-        base64_image: base64Image,
-        mime_type: mimeType
-      }, {
-        headers: getAuthHeaders(access)
-      });
+      const response = await axios.post(
+        "http://gatekeepr.local:8000/api/ocr/",
+        {
+          base64_image: base64Image,
+          mime_type: mimeType,
+        },
+        {
+          headers: getAuthHeaders(access),
+        }
+      );
 
       return response.data;
     } catch (err) {
@@ -384,9 +388,13 @@ const Home = () => {
 
       // Handle quota exceeded errors specifically
       const errorMessage = err.response?.data?.error;
-      if (typeof errorMessage === 'string' && (errorMessage.includes("quota") || errorMessage.includes("429"))) {
+      if (
+        typeof errorMessage === "string" &&
+        (errorMessage.includes("quota") || errorMessage.includes("429"))
+      ) {
         return {
-          error: "OCR service quota exceeded. The free tier has reached its daily limit. Please try again later or use manual entry."
+          error:
+            "OCR service quota exceeded. The free tier has reached its daily limit. Please try again later or use manual entry.",
         };
       }
 
@@ -437,7 +445,9 @@ const Home = () => {
             .toString()
             .trim()
             .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-        drivers_license: (extracted.license_number || "").toString().trim().toUpperCase() || "",
+        drivers_license:
+          (extracted.license_number || "").toString().trim().toUpperCase() ||
+          "",
         address: (extracted.home_address || "").toString().trim() || "",
       };
 
